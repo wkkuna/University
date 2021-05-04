@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "utility": "c",
+        "bit": "c",
+        "deque": "c",
+        "map": "c",
+        "*.tcc": "c",
+        "string": "c",
+        "unordered_map": "c",
+        "vector": "c"
+    }
+}
