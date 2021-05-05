@@ -1,27 +1,27 @@
-I semester
-Calculus
-Computing for Computer Scientists
-Introduction to Computer Science
-Introduction to Programming in C
-Logic for Computer Science
+## I semester 2019/20 (winter)
+Calculus  
+Computing for Computer Scientists  
+Introduction to Computer Science  
+Introduction to Programming in C  
+Logic for Computer Science  
 
-II semester
-Algebra
-Computer Architecture for Programmers
-C++ Course
-Object-Oriented Programming
-Programming Methodology
+## II semester 2019/20 (summer)
+Algebra  
+[Computer Architecture for Programmers](ASK/)  
+[C++ Course](CPP/)  
+[Object-Oriented Programming](PO/)  
+[Programming Methodology](MP/)  
 
-III semester
-Discrete Mathematics
-Human-Computer Interaction
-Numerical Analysis
-Operating Systems
+## III semester 2020/21 (winter)
+[Discrete Mathematics](MDM/)  
+Human-Computer Interaction  
+[Numerical Analysis](ANL/)  
+[Operating Systems](SO/)  
 
-IV semester
-Algorithms and Data Structures
-Computer Networks
-Course: Modeling 3D and Visualization in SketchUp
-Probability and Statistics
+## IV semester 2020/21 (summer)
+[Algorithms and Data Structures](AISD/)  
+Computer Networks  
+[Modeling 3D and Visualization in SketchUp](Sketchup/)  
+[Probability and Statistics](RPIS/)  
 Workshops: Linux Device Drivers Programming
 
