@@ -20,7 +20,7 @@ Human-Computer Interaction
 
 ## IV semester 2020/21 (summer)
 [Algorithms and Data Structures](AISD/)  
-Computer Networks  
+[Computer Networks](SK/)  
 [Modeling 3D and Visualization in SketchUp](Sketchup/)  
 [Probability and Statistics](RPIS/)  
 Workshops: Linux Device Drivers Programming
