@@ -25,3 +25,6 @@ Human-Computer Interaction
 [Probability and Statistics](RPIS/)  
 Workshops: Linux Device Drivers Programming
 
+## V semester 2021/22 - dean's leave (winter)
+[Advanced Python Programming](Python/)  
+[Course: Rust language](Rust/)  
