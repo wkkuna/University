@@ -1,0 +1,3 @@
+[submodule "Python/tetris"]
+	path = Python/tetris
+	url = https://github.com/wkkuna/tetris.git
