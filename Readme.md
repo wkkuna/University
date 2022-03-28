@@ -28,3 +28,11 @@ Workshops: Linux Device Drivers Programming
 ## V semester 2021/22 - dean's leave (winter)
 [Advanced Python Programming](Python/)  
 [Course: Rust language](Rust/)  
+
+## VI semester 2021/22 (summer)
+[Algorithms and Data Structures](AISD/)  
+[Artificial Intelligence](AI/)  
+[Design of database applications](KPAZBD/)  
+Game Testing  
+Term Logic  
+Workshop - making a start-up  
