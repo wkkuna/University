@@ -29,10 +29,17 @@ Workshops: Linux Device Drivers Programming
 [Advanced Python Programming](Python/)  
 [Course: Rust language](Rust/)  
 
-## VI semester 2021/22 (summer)
+## V semester 2021/22 (summer)
 [Algorithms and Data Structures](AISD/)  
 [Artificial Intelligence](AI/)  
 [Design of database applications](KPAZBD/)  
 Game Testing  
 Term Logic  
 Workshop - making a start-up  
+
+## VI semester 2022/23 (winter)
+[Machine Learning](ML/)  
+Concurrent Programming  
+Optimization of Deep Neural Networks on IoT Devices  
+Project: Coreforge  
+Software Engineering  
