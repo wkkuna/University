@@ -1,3 +1,15 @@
+# We draw hands randomly for each player
+# s times and count the probability by
+# wins / no of games.
+
+# The best deck (experimentally):
+# Blotkarz deck range(8, 11) and colours range(0, 4)
+# Possibility of Blotkarz's win 53.84%
+
+# We don't have to compare all poker rankings
+# since some of them are not even possible
+# (like royal flush)
+
 from random import sample
 
 
@@ -18,8 +30,8 @@ class PokerTable:
         self.deck0 = [[r, c] for r in ranks0 for c in colours0]
         self.deck1 = [[r, c] for r in ranks1 for c in colours1]
 
-    def draw_hand(self, deck=0):
-        return sample(self.deck1, 5) if deck == 1 else sample(self.deck0, 5)
+    def draw_hand(self, deck="blotkarz"):
+        return sample(self.deck1, 5) if deck == "figurant" else sample(self.deck0, 5)
 
     def get_hand_ranking(self, hand):
         hand = sorted(hand, key=lambda x: x[0], reverse=True)
@@ -29,12 +41,15 @@ class PokerTable:
 
         prev_card = hand[0]
         for i, card in enumerate(hand[1:], 1):
+            # Number of cards of each color
             if prev_card[1] == card[1]:
                 colour[i] = colour[i-1] + 1
 
+            # How many cards of the same rank
             if prev_card[0] == card[0]:
                 one_rank[i] = one_rank[i-1] + 1
 
+            # How many ascending cards
             if prev_card[0] - 1 == card[0]:
                 ascending[i] = ascending[i-1] + 1
 
@@ -70,49 +85,46 @@ class PokerTable:
 
         return self.hand_rankings['High card']
 
-    # returns the hand number of a winner
+    # Returns the hand number of a winner
     def determine_winner(self, hand0, hand1):
         ranking0 = self.get_hand_ranking(hand0)
         ranking1 = self.get_hand_ranking(hand1)
 
+        # If the ranking is the same, the highest card wins
         if ranking0 == ranking1:
-            return int(hand1[0][0] > hand0[0][0])
+            for r in range(5):
+                if hand1[0][r] != hand0[0][r]:
+                    return int(hand1[0][0] > hand0[0][0])
+            return 0
 
         return int(ranking1 > ranking0)
 
 
-def estimate_winning_probability(sample, blotkarz_deck=range(2, 11), blotkarz_colours=range(0, 4)):
-    print("Running tests with blotkarz deck {} and blotkarz colours {}".format(
-        blotkarz_deck, blotkarz_colours))
+def win_probability(sample, blotkarz_deck=range(2, 11), blotkarz_colours=range(0, 4)):
+    print(f"Blotkarz deck {blotkarz_deck} and colours {blotkarz_colours}")
     pt = PokerTable(ranks0=blotkarz_deck, colours0=blotkarz_colours)
-    win_count = 0
+    wins = 0
 
     for _ in range(sample):
         blotkarz_hand = pt.draw_hand()
-        figurant_hand = pt.draw_hand(1)
+        figurant_hand = pt.draw_hand("figurant")
 
-        win_count += pt.determine_winner(figurant_hand, blotkarz_hand)
+        wins += pt.determine_winner(figurant_hand, blotkarz_hand)
 
-    print("The tests estimate the possibility of Blotkarz's win at {}%".format(
-        (win_count/sample)*100))
+    print(f"Possibility of Blotkarz's win {wins / sample * 100}%")
 
 
 if __name__ == "__main__":
-    estimate_winning_probability(10000, blotkarz_deck=range(2, 11))
-    estimate_winning_probability(10000, blotkarz_deck=range(3, 11))
-    estimate_winning_probability(10000, blotkarz_deck=range(4, 11))
-    estimate_winning_probability(10000, blotkarz_deck=range(5, 11))
-    estimate_winning_probability(10000, blotkarz_deck=range(6, 11))
-    estimate_winning_probability(10000, blotkarz_deck=range(7, 11))
-    estimate_winning_probability(10000, blotkarz_deck=range(8, 11))
-    estimate_winning_probability(10000, blotkarz_deck=range(
-        2, 11), blotkarz_colours=range(0, 3))
-    estimate_winning_probability(10000, blotkarz_deck=range(
-        2, 11), blotkarz_colours=range(0, 2))
-    estimate_winning_probability(10000, blotkarz_deck=range(
-        3, 11), blotkarz_colours=range(0, 3))
-    estimate_winning_probability(10000, blotkarz_deck=range(
-        3, 11), blotkarz_colours=range(0, 2))
-    estimate_winning_probability(10000, blotkarz_deck=range(
-        6, 11), blotkarz_colours=range(0, 2))
-    pass
+    s = 10000
+    win_probability(s, range(2, 11))
+    win_probability(s, range(3, 11))
+    win_probability(s, range(4, 11))
+    win_probability(s, range(5, 11))
+    win_probability(s, range(6, 11))
+    win_probability(s, range(7, 11))
+    win_probability(s, range(8, 11))
+    win_probability(s, range(2, 11), range(0, 3))
+    win_probability(s, range(2, 11), range(0, 2))
+    win_probability(s, range(3, 11), range(0, 3))
+    win_probability(s, range(3, 11), range(0, 2))
+    win_probability(s, range(6, 11), range(0, 2))

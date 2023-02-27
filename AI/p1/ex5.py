@@ -1,5 +1,12 @@
+# As stated in task description
+# We randomly select row/column in which we're
+# going to make changes, then flip the bit that
+# is going to minimalize the `opt_dist` that is
+# that is best for our current situation
+
+# I alter between modifing column/row as I think
+# it gets me the result quicker
 from random import choice, randint
-from time import time
 
 
 class Puzzle:
@@ -14,23 +21,27 @@ class Puzzle:
         output = ""
         for i in range(self.height):
             for j in range(self.width):
-                if self.puzzle[i][j] == 1:
-                    output += '#'
-                else:
-                    output += '.'
+                c = '#' if self.puzzle[i][j] == 1 else '.'
+                output += c
             output += '\n'
         return output
 
+    def opt_dist(self, idx, D, is_row):
+        bits = []
+        min_cost = self.width
+        bits = self.puzzle[idx] if is_row else [
+            self.puzzle[x][idx] for x in range(self.height)]
+        for i in range(len(bits) - D + 1):
+            min_cost = min(D - sum(bits[i:i+D]) +
+                           sum(bits[:i]) + sum(bits[i+D:]), min_cost)
+        return min_cost
+
     def is_valid(self, x=None, y=None):
         if x != None:
-            return ('1' * self.rows_spec[x] in "".join(str(e) for e in self.puzzle[x]))\
-                and (sum(self.puzzle[x]) == self.rows_spec[x])
+            return self.opt_dist(x, rows_spec[x], True) == 0
 
         if y != None:
-            column = [self.puzzle[x][y] for x in range(self.height)]
-            valid = ('1' * self.columns_spec[y] in "".join([str(x) for x in column]))\
-                and (sum(column) == self.columns_spec[y])
-            return valid
+            return self.opt_dist(y, columns_spec[y], False) == 0
 
         for i in range(self.height):
             if not self.is_valid(x=i) or not self.is_valid(y=i):
@@ -38,8 +49,8 @@ class Puzzle:
         return True
 
     def reset(self):
-        self.puzzle = [[0 for y in range(self.width)]
-                       for x in range(self.height)]
+        self.puzzle = [[0 for _ in range(self.width)]
+                       for _ in range(self.height)]
 
     def solve(self):
         t0 = 0
@@ -67,52 +78,32 @@ class Puzzle:
 
             return choice(invalid_columns)
 
-        def opt_dist(idx, D, is_row):
-            bits = []
-            min_cost = self.width
-
-            bits = self.puzzle[idx] if is_row else [
-                self.puzzle[x][idx] for x in range(self.height)]
-            ones = [i for i in range(len(bits)) if bits[i] == 1]
-
-            if not len(ones):
-                return D
-
-            n = len(bits)
-            for fst in ones:
-                if fst+D > n:
-                    break
-                min_cost = min(D - sum(bits[fst:fst+D]) +
-                               sum(bits[:fst]) + sum(bits[fst+D:]), min_cost)
-
-            return min_cost
-
-        def switch(i, j):
-            self.puzzle[i][j] = 0 if self.puzzle[i][j] else 1
+        def flip(i, j):
+            self.puzzle[i][j] = not self.puzzle[i][j]
 
         def get_opt_element(idx, is_row=True):
             best_fit = -self.width
             opt_elem = None
 
             for i in range(self.height):
-                row_idx = idx if is_row else i
-                column_idx = i if is_row else idx
+                ridx = idx if is_row else i
+                cidx = i if is_row else idx
 
-                op0 = opt_dist(row_idx, self.rows_spec[row_idx], True)\
-                    + opt_dist(column_idx,
-                               self.columns_spec[column_idx], False)
+                # Cost before altering the bit
+                op0 = self.opt_dist(ridx, self.rows_spec[ridx], True)\
+                    + self.opt_dist(cidx, self.columns_spec[cidx], False)
 
-                switch(row_idx, column_idx)
+                flip(ridx, cidx)
 
-                ops = opt_dist(row_idx, self.rows_spec[row_idx], True)\
-                    + opt_dist(column_idx,
-                               self.columns_spec[column_idx], False)
+                # Cost after altering the bit
+                op1 = self.opt_dist(ridx, self.rows_spec[ridx], True)\
+                    + self.opt_dist(cidx, self.columns_spec[cidx], False)
 
-                if op0 - ops > best_fit:
-                    best_fit = op0 - ops
-                    opt_elem = (row_idx, column_idx)
+                if op0 - op1 > best_fit:
+                    best_fit = op0 - op1
+                    opt_elem = (ridx, cidx)
 
-                switch(row_idx, column_idx)
+                flip(ridx, cidx)
             return opt_elem
 
         while (not self.is_valid() and t0 < limit):
@@ -126,10 +117,11 @@ class Puzzle:
             else:
                 elem = get_opt_element(pick)
 
+            # Flip anything at random if we didn't find anything
             if elem is None:
-                switch(randint(0, self.width-1), randint(0, self.height-1))
+                flip(randint(0, self.width-1), randint(0, self.height-1))
             else:
-                switch(elem[0], elem[1])
+                flip(elem[0], elem[1])
             t0 += 1
 
         if not self.is_valid():

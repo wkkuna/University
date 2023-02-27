@@ -1,14 +1,28 @@
-#!/usr/bin/python
+# Start splitting given text in reversed order
+# from the longest possible word.
+# Using a list of length of the text we save
+# splitted word of maximum square sum (so far)
+# at the begining index of a first word in a current
+# sequence.
+# The whole text with word split maximizing
+# square sum is at the index 0 of the list.
 
+# Read words into a set
 def read_dictionary():
-    dt = []
-    with open("polish_words.txt") as f:
-        dt = f.read().splitlines()
-    return list(filter(lambda x: len(x) != 0, dt))
+    dt = None
+    with open("words_for_ai1.txt") as f:
+        dt = list(f.read().splitlines())
+    return list(filter(len, dt))
+
+# Square sum of word length
 
 
 def sqr_sum(words):
     return sum(map(lambda x: len(x)**2, words))
+
+# Chose the word that:
+# a) exists in a dictionary
+# b) maximalizes word length square sum
 
 
 def best_fit(text, dictionary):
@@ -20,8 +34,8 @@ def best_fit(text, dictionary):
 
     max_set = [[] for _ in range(n)]
 
-    for start in reversed(range(0, n-1)):
-        for stop in range(start + 1, n+1):
+    for start in reversed(range(n - 1)):
+        for stop in range(start + 1, n + 1):
             sub = text[start:stop].strip()
             if sub in dictionary:
                 if stop < n:
@@ -46,8 +60,5 @@ def separate_text(text, dictionary):
 if __name__ == "__main__":
     with open("zad2_input.txt") as f, open("zad2_output.txt", 'w') as out:
         dictionary = read_dictionary()
-        text = f.readline()
-        while text:
-            output = separate_text(text, dictionary) + "\n"
-            text = f.readline()
-            out.write(output)
+        for text in f.readlines():
+            out.write(f"{separate_text(text, dictionary)}\n")
