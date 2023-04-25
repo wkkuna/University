@@ -1,221 +1,135 @@
-from random import choice, randint, seed
-from time import time
-import numpy as np
+from collections import deque
+from numpy import zeros, ndarray
 
-cache = {}
 
-class Puzzle:
-    def __init__(self, rows_spec, columns_spec):
-        self.rows_spec = rows_spec
-        self.columns_spec = columns_spec
-        self.width = len(columns_spec)
-        self.height = len(rows_spec)
-        self.reset()
+def generate_seqs(n: int, pattern: list[int]) -> list[list[int]]:
+    '''
+    Generate all possible sequences of 1s and 0s of length `n`
+    restricted by the pattern `pattern`, where each element on 
+    the list `pattern` specifies required length of 1s.
+    Each sequence of 1s must be seperated by at least one 0.
+    '''
 
-    def draw_puzzle(self):
-        output = ""
-        for i in range(self.height):
-            for j in range(self.width):
-                if self.puzzle[i][j] == 1:
-                    output += '#'
-                else:
-                    output += '.'
-            output += '\n'
-        return output
+    if not n:
+        return [[]]
 
-    def is_valid(self, x=None, y=None):
-        def is_valid_seq(bits, spec):
-            offset = 0
-            bits_str = "".join(str(e) for e in bits)
-            for s in spec:
-                idx = bits_str.find('1' * s, offset)
-                if idx == -1:
-                    return False
-                offset = idx + s + 1
-            return sum(bits) == sum(spec)
+    if not len(pattern):
+        return [[0] * n]
 
-        if x != None:
-            return is_valid_seq(self.puzzle[x], self.rows_spec[x])
+    block_len = pattern[0]
+    block = [1] * block_len
+    new_n = n - block_len
 
-        if y != None:
-            return is_valid_seq([self.puzzle[x][y] for x in range(self.height)], self.columns_spec[y])
+    if len(pattern[1:]) > 0:
+        block += [0]
+        new_n -= 1
 
-        for i in range(self.height):
-            if not self.is_valid(x=i):
-                return False
-        for j in range(self.width):
-            if not self.is_valid(y=j):
-                return False
-        return True
+    # continiue the process for the rest of the pattern
+    cur_seqs = [block + p for p in generate_seqs(new_n, pattern[1:])]
+    required_len = sum(pattern) + len(pattern) - 1
 
-    def fill_certain(self):
-        invalid_rows = [x for x in range(self.height) if not self.is_valid(x=x)]
-        invalid_columns = [y for y in range(self.width) if not self.is_valid(y=y)]
+    if required_len < n:  # adjust size by filling beginning with zeros
+        return cur_seqs + [[0] + p for p in generate_seqs(n - 1, pattern)]
+    else:
+        return cur_seqs
 
-        def fill(idx, is_row=True):
-            def fill_range(idx, start, stop, value, is_row=True):
-                if stop < start:
-                    return
 
-                for i in range(start, stop):
-                    row = idx if is_row else i
-                    col = i if is_row else idx
+def solve(rspecs: list[list[int]], cspecs: list[list[int]]) -> ndarray:
+    '''
+    The main idea is to generate all the possible
+    rows / columns for given specification to then
+    find common elements amongst them all and eliminate
+    those potential solution that contradict them
 
-                    self.puzzle[row][col] = value
+    I.E. if all rows share the same value for element (x, y)
+    then those columns that contradict the (x, y) cannot
+    be the solution.
 
-            specs = self.rows_spec[idx] if is_row else self.columns_spec[idx]
-            dim = self.width if is_row else self.height
-            
-            for i, spec in enumerate(specs):
-                sum_left = sum(specs[:i]) + i
-                sum_right = sum(specs[i+1:]) + len(specs) - i - 1
+    We may need to go back to some of the elements therefore
+    we put them on a queue to later consider them
+    '''
+    height, width = len(rspecs), len(cspecs)
+    rspace = [generate_seqs(width, row) for row in rspecs]
+    cspace = [generate_seqs(height, column) for column in cspecs]
 
-                x0 = sum_left
-                x1 = dim - sum_right
-                diff = x1 - x0 - spec
-                fill_range(idx, x0 + diff, x1 - diff, 1, is_row=is_row)
+    puzzle = zeros((height, width))  # matrix with zeros
+    # Coordinates for the undetermined elements of the puzzle
+    undetermined: deque[tuple[int, int]] = deque()
 
-        for x in invalid_rows:
-            fill(x)
+    def adjust_columns(y, x):
+        cspace[x] = list(filter(lambda c: c[y] == puzzle[y][x], cspace[x]))
 
-        for y in invalid_columns:
-            fill(y, is_row=False)
+    def adjust_rows(y, x):
+        rspace[y] = list(filter(lambda r: r[x] == puzzle[y][x], rspace[y]))
 
-    def reset(self):
-        self.puzzle = [[0 for y in range(self.width)]
-                       for x in range(self.height)]
+    def subsolve(y, x, current_rows):
+        '''
+        Mark the certain elements in the puzzle.
 
-    def solve(self):
-        t0 = 0
-        limit = 30000
+        If an element occurs in all generated 
+        sequences it's certain.
+        '''
+        rfixed = current_rows[0][x]
 
-        def pick_row():
-            invalid_rows = [x for x in range(self.height) if not self.is_valid(x=x)]
-            if len(invalid_rows) == 0:
-                return None
-            return choice(invalid_rows)
+        # Fixed point within all the posible rows
+        if all(row[x] == rfixed for row in current_rows):
+            # the element is common for all possible rows,
+            # therefore, it must be in the solution
+            puzzle[y][x] = rfixed
+            # filter out the contradictory columns
+            adjust_columns(y, x)
 
-        def pick_column():
-            invalid_columns = [y for y in range(self.width) if not self.is_valid(y=y)]
-            if len(invalid_columns) == 0:
-                return None
-            return choice(invalid_columns)
+        # Find common point for all columns
+        else:
+            cfixed = cspace[x][0][y]
 
-        def opt_dist(idx, spec, is_row):
-            seq = self.puzzle[idx] if is_row else [self.puzzle[x][idx] for x in range(self.height)]
-
-            def opt_dist_sequence(bits, spec):
-                global cache
-                run = tuple(bits), tuple(spec)
-                if run in cache:
-                    return cache[run]
-
-                if not spec:
-                    return sum(bits)
-
-                n = len(bits)
-                s = spec[0]
-                
-                subseq = sum(bits[:s])
-                after = n > s and bits[s]
-                min_cost = (s - subseq) + after + opt_dist_sequence(bits[s+1:], spec[1:])
-                
-                before = 0
-                last = n - sum(spec) - len(spec) + 1
-                for i in range(last):
-                    subseq += bits[i + s] - bits[i]
-                    before += bits[i]
-                    after = n > i + s + 1 and bits[i + s + 1]
-                    min_cost = min(s - subseq + before + after + opt_dist_sequence(bits[i+s+2:], spec[1:]), min_cost)
-
-                cache[run] = min_cost
-                return min_cost
-            
-            return opt_dist_sequence(seq, spec)
-
-        def switch(i, j):
-            self.puzzle[i][j] ^= 1
-
-        def get_opt_element(idx, is_row=True):
-            dim = self.width if is_row else self.height
-            best_fit = -dim
-            opt_elem = None
-
-            for i in range(dim):                
-                row_idx = idx if is_row else i
-                column_idx = i if is_row else idx
-
-                op0 = opt_dist(row_idx, self.rows_spec[row_idx], True)\
-                    + opt_dist(column_idx, self.columns_spec[column_idx], False)
-                
-                switch(row_idx, column_idx)
-                
-                ops = opt_dist(row_idx, self.rows_spec[row_idx], True)\
-                    + opt_dist(column_idx, self.columns_spec[column_idx], False)
-
-                if ops == np.Inf:
-                    continue 
-
-                if op0 - ops > best_fit:
-                    best_fit = op0 - ops
-                    opt_elem = (row_idx, column_idx)
-                
-                switch(row_idx, column_idx)
-            return opt_elem
-        
-        self.fill_certain()
-
-        while (not self.is_valid() and t0 < limit):
-            self.fill_certain()
-            pick = pick_row()
-            elem = None
-            
-            if pick is None or t0 % 2:
-                pick = pick_column()
-                if pick is not None:
-                    elem = get_opt_element(pick, is_row=False)
+            if all(column[y] == cfixed for column in cspace[x]):
+                puzzle[y][x] = cfixed
+                adjust_rows(y, x)
             else:
-                elem = get_opt_element(pick)
 
-            if t0%5 == 0:
-                switch(randint(0, self.height-1), randint(0, self.width-1))
+                undetermined.append((y, x))  # we delay this cell
 
-            if elem is None:
-                switch(randint(0, self.height-1), randint(0, self.width-1))
-            else:
-                switch(elem[0], elem[1])
-            t0 += 1
+    for y in range(height):
+        current_rows = rspace[y]
 
-        if not self.is_valid():
-            return None
+        for x in range(width):
+            subsolve(y, x, current_rows)
 
-        return self.draw_puzzle()
+    while len(undetermined) > 0:
+        y, x = undetermined.popleft()
+        current_rows = rspace[y]
+        subsolve(y, x, current_rows)
+
+    return puzzle
 
 
-def solve_puzzle(puzzle):
-    out = puzzle.solve()
-    while(out is None):
-        puzzle.reset()
-        out = puzzle.solve()
+def draw_puzzle(puzzle) -> str:
+    out: str = ''
+    for row in puzzle:
+        for elem in row:
+            out += '#' if elem else '.'
+        out += '\n'
     return out
 
 
 if __name__ == "__main__":
-    with open("zad_input.txt") as f, open("zad_output.txt", 'w') as out:
-        line = f.readline()
-        h, w = line.split(' ')
-        h = int(h)
-        rows_spec = []
-        columns_spec = []
+    with open('zad_input.txt') as f:
+        content: list[str] = []
+        row_specs: list[list[int]] = []
+        col_specs: list[list[int]] = []
+
+        h, w = f.readline().split(' ')
+        h, w = int(h), int(w)
+
         for i, line in enumerate(f.readlines()):
             num = list(map(int, line.split(' ')))
-            tmp = []
             if i < h:
-                rows_spec.append(num)
+                row_specs.append(num)
             else:
-                columns_spec.append(num)
+                col_specs.append(num)
 
-        p = Puzzle(rows_spec, columns_spec)
-        output = solve_puzzle(p)
-        print(output)
-        out.writelines(output)
+    puzzle = solve(row_specs, col_specs)
+    print(draw_puzzle(puzzle))
+    with open("zad_output.txt", "w") as out:
+        out.write(draw_puzzle(puzzle))
