@@ -28,11 +28,11 @@ def horizontal():
 def vertical():
     return [all_different(get_column(j)) for j in range(9)]
 
-# Added
+# MODIFIED: Constraint for the squares in sudoku
 def get_square(i, j):
     return [V(x, y) for x in range(i, i + 3) for y in range(j, j + 3)]
 
-# Added
+# MODIFIED
 def squares():
     return [all_different(get_square(i, j)) for i in [0, 3, 6] for j in [0, 3, 6]]
 
@@ -51,23 +51,25 @@ def print_constraints(Cs, indent, d):
 
 def sudoku(assigments):
     variables = [V(i, j) for i in range(9) for j in range(9)]
-    sys.stdout = open("zad_output.txt", "w")
-    print(':- use_module(library(clpfd)).')
-    print('solve([' + ', '.join(variables) + ']) :- ')
+    # MODIFIED
+    with open("zad_output.txt", "w") as out:
+        sys.stdout = out
+        print(':- use_module(library(clpfd)).')
+        print('solve([' + ', '.join(variables) + ']) :- ')
+        # MODIFIED
+        cs = domains(variables) + vertical() + horizontal() + squares()
+        for i, j, val in assigments:
+            cs.append('%s #= %d' % (V(i, j), val))
 
-    cs = domains(variables) + vertical() + horizontal() + squares()  # Modified
-    for i, j, val in assigments:
-        cs.append('%s #= %d' % (V(i, j), val))
-
-    print_constraints(cs, 4, 70),
-    print()
-    print('    labeling([ff], [' + ', '.join(variables) + ']).')
-    print()
-    print(':- solve(X), write(X), nl.')
-    sys.stdout.close()
+        print_constraints(cs, 4, 70),
+        print()
+        print('    labeling([ff], [' + ', '.join(variables) + ']).')
+        print()
+        print(':- solve(X), write(X), nl.')
 
 
 if __name__ == "__main__":
+    # MODIFIED
     with open("zad_input.txt", "r") as f:
         raw = 0
         triples = []
