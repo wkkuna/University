@@ -1,3 +1,22 @@
-target/
 pokrycie_obowiazkow.py
 *.mkv
+*.bin
+
+# vscode
+.vscode/
+
+# python
+__pycache__/
+
+# scala
+SiP/**/target/
+SiP/**/project/
+.bsp
+.metals
+.bloop
+
+# cpp
+*.out
+*.o
+*.so
+*.a
