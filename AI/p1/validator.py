@@ -9,23 +9,16 @@ python validator.py zad1 python rozwiazanie.py
 2. uruchomienie wybranych testów
 python validator.py --cases 1,3-5 zad1 a.out
 
-3. urochomienie na innych testach
-python validator.py --testset large_tests.yaml zad1 python rozwiazanie.py
-
-4. Wypisanie przykadowego wejścia/wyjścia:
+3. Wypisanie przykadowego wejścia/wyjścia:
 python validator.py --show_example zad1
 '''
 
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
 
 import argparse
 import os
 import signal
 import subprocess
 import threading
-import yaml
 import gzip
 import sys
 import time
@@ -53,269 +46,155 @@ TIME_MULTIPLIER *= 1.1 # SAFETY BONUS :)
 
 
 # Tests embedded into the validator.
-DEFAULT_TESTSET_YAML = u'''
-zad1:
-  defaults:
-    timeout: 10 # second
-    input_file: zad1_input.txt
-    output_file: zad1_output.txt
-  validator: whitespace_relaxed_validator
-  cases:
-# single-line input and output can be formatted as:
-    - inp: black g8 h1 c4
-      out: 10
-# multiline input and output can formatted as:
-    - inp: |
-        black b4 f3 e8
-      out: |
-        6
-    - inp: white a1 e3 b7
-      out: 9
-    - inp: black h7 a2 f2
-      out: 6
-    - inp: black a2 e4 a4
-      out: 8
-zad2:
-  defaults:
-    timeout: 60
-    input_file: zad2_input.txt
-    output_file: zad2_output.txt
-  validator: "lambda opts, out: perlines_validator(opts, out, zad2_line_compare)"
-  cases:
-    - inp: |
-        księgapierwsza
-        gospodarstwo
-        powrótpaniczaspotkaniesiępierwszewpokoikudrugieustołuważnasędziegonaukaogrzecznościpodkomorzegouwagipolitycznenadmodamipocząteksporuokusegoisokołażalewojskiegoostatniwoźnytrybunałurzutokanaówczesnystanpolitycznylitwyieuropy
-        litwoojczyznomojatyjesteśjakzdrowie
-        ileciętrzebacenićtentylkosiędowie
-        ktocięstraciłdziśpięknośćtwąwcałejozdobie
-        widzęiopisujębotęskniępotobie
-        pannoświętacojasnejbroniszczęstochowy
-        iwostrejświeciszbramietycogródzamkowy
-        nowogródzkiochraniaszzjegowiernymludem
-        jakmniedzieckodozdrowiapowróciłaścudem
-        gdyodpłaczącejmatkipodtwojąopiekę
-        ofiarowanymartwąpodniosłempowiekę
-        izarazmogłempieszodotwychświątyńprogu
-        iśćzawróconeżyciepodziękowaćbogu
-        taknaspowróciszcudemnaojczyznyłono
-        tymczasemprzenośmojąduszęutęsknioną
-        dotychpagórkówleśnychdotychłąkzielonych
-        szerokonadbłękitnymniemnemrozciągnionych
-        dotychpólmalowanychzbożemrozmaitem
-        wyzłacanychpszenicąposrebrzanychżytem
-        gdziebursztynowyświerzopgrykajakśniegbiała
-        gdziepanieńskimrumieńcemdzięcielinapała
-        awszystkoprzepasanejakbywstęgąmiedzą
-        zielonąnaniejzrzadkacichegruszesiedzą
-        śródtakichpólprzedlatynadbrzegiemruczaju
-        napagórkuniewielkimwebrzozowymgaju
-        stałdwórszlacheckizdrzewaleczpodmurowany
-        świeciłysięzdalekapobielaneściany
-        tymbielszeżeodbiteodciemnejzieleni
-      out: |
-        księga pierwsza
-        gospodarstwo
-        powrót panicza spotkanie się pierwsze w pokoiku drugie u stołu ważna sędziego nauka o grzeczności podkomorzego uwagi polityczne nad modami początek sporu o kusego i sokoła żale wojskiego ostatni woźny trybunału rzut oka na ówczesny stan polityczny litwy i europy
-        litwo ojczyznom o jaty jesteś jak zdrowie
-        ile cię trzeba cenić ten tylko się dowie
-        kto cię stracił dziś piękność twą w całej ozdobie
-        widzę i opisuję bo tęsknię po tobie
-        panno święta co jasnej bronisz częstochowy
-        i w ostrej świecisz bramie ty co gród zamkowy
-        nowogródzki ochraniasz z jego wiernym ludem
-        jak mnie dziecko do zdrowia powróciłaś cudem
-        gdy od płaczącej matki pod twoją opiekę
-        ofiarowany martwą podniosłem powiekę
-        i zaraz mogłem pieszo do twych świątyń progu
-        iść zawrócone życie podziękować bogu
-        tak nas powrócisz cudem na ojczyzny łono
-        tymczasem przenoś moją duszę utęsknioną
-        do tych pagórków leśnych do tych łąk zielonych
-        szeroko nad błękitnym niemnem rozciągnionych
-        do tych pól malowanych zbożem rozmaitem
-        wyzłacanych pszenicą posrebrzanych żytem
-        gdzie bursztynowy świerzop gry kajak śnieg biała
-        gdzie panieńskim rumieńcem dzięcielina pała
-        a wszystko przepasane jakby wstęgą miedzą
-        zieloną na niej z rzadka ciche grusze siedzą
-        śród takich pól przed laty nad brzegiem ruczaju
-        na pagórku niewielkim we brzozowym gaju
-        stał dwór szlachecki z drzewa lecz podmurowany
-        świeciły się z daleka pobielane ściany
-        tym bielsze że odbite od ciemnej zieleni
-zad4:
-  defaults:
-    timeout: 10 # second
-    input_file: zad4_input.txt
-    output_file: zad4_output.txt
-  validator: perlines_validator
-  cases:
-    - inp: |
-        0010001000 5
-        0010001000 4
-        0010001000 3
-        0010001000 2
-        0010001000 1
-        0010001000 0
-        0010101000 5
-        0010101000 4
-        0010101000 3
-        0010101000 2
-        0010101000 1
-        0010101000 0
-      out: |
-        3
-        4
-        3
-        2
-        1
-        2
-        2
-        3
-        2
-        3
-        2
-        3
-    - inp: |
-        0000000001 1
-        0000000010 1
-        1000000000 1
-        0100000000 1
-      out: |
-        0
-        0
-        0
-        0
-zad5:
-  defaults:
-    timeout: 30 # second
-    input_file: zad5_input.txt
-    output_file: zad5_output.txt
-  validator: perlines_validator
-  cases:
-    - inp: |
-        7 7
-        7
-        7
-        7
-        7
-        7
-        7
-        7
-        7
-        7
-        7
-        7
-        7
-        7
-        7
-      out: |
-        #######
-        #######
-        #######
-        #######
-        #######
-        #######
-        #######
-    - inp: |
-        7 7
-        2
-        2
-        7
-        7
-        2
-        2
-        2
-        2
-        2
-        7
-        7
-        2
-        2
-        2
-      out: |
-        ..##...
-        ..##...
-        #######
-        #######
-        ..##...
-        ..##...
-        ..##...
-    - inp: |
-        7 7
-        2
-        2
-        7
-        7
-        2
-        2
-        2
-        4
-        4
-        2
-        2
-        2
-        5
-        5
-      out: |
-        ##.....
-        ##.....
-        #######
-        #######
-        .....##
-        .....##
-        .....##
-    - inp: |
-        7 7
-        7
-        6
-        5
-        4
-        3
-        2
-        1
-        1
-        2
-        3
-        4
-        5
-        6
-        7
-      out: |
-        #######
-        .######
-        ..#####
-        ...####
-        ....###
-        .....##
-        ......#
-    - inp: |
-        7 7
-        7
-        5
-        3
-        1
-        1
-        1
-        1
-        1
-        2
-        3
-        7
-        3
-        2
-        1
-      out: |
-        #######
-        .#####.
-        ..###..
-        ...#...
-        ...#...
-        ...#...
-        ...#...
-'''
-DEFAULT_TESTSET = yaml.load(DEFAULT_TESTSET_YAML, Loader=yaml.FullLoader)
+
+DEFAULT_TESTSET = {'zad1': {'cases': [{'inp': 'black g8 h1 c4', 'out': 10},
+                    {'inp': 'black b4 f3 e8\n', 'out': '6\n'},
+                    {'inp': 'white a1 e3 b7', 'out': 9},
+                    {'inp': 'black h7 a2 f2', 'out': 6},
+                    {'inp': 'black a2 e4 a4', 'out': 8}],
+          'defaults': {'input_file': 'zad1_input.txt',
+                       'output_file': 'zad1_output.txt',
+                       'timeout': 10},
+          'validator': 'whitespace_relaxed_validator'},
+ 'zad2': {'cases': [{'inp': 'księgapierwsza\n'
+                            'gospodarstwo\n'
+                            'powrótpaniczaspotkaniesiępierwszewpokoikudrugieustołuważnasędziegonaukaogrzecznościpodkomorzegouwagipolitycznenadmodamipocząteksporuokusegoisokołażalewojskiegoostatniwoźnytrybunałurzutokanaówczesnystanpolitycznylitwyieuropy\n'
+                            'litwoojczyznomojatyjesteśjakzdrowie\n'
+                            'ileciętrzebacenićtentylkosiędowie\n'
+                            'ktocięstraciłdziśpięknośćtwąwcałejozdobie\n'
+                            'widzęiopisujębotęskniępotobie\n'
+                            'pannoświętacojasnejbroniszczęstochowy\n'
+                            'iwostrejświeciszbramietycogródzamkowy\n'
+                            'nowogródzkiochraniaszzjegowiernymludem\n'
+                            'jakmniedzieckodozdrowiapowróciłaścudem\n'
+                            'gdyodpłaczącejmatkipodtwojąopiekę\n'
+                            'ofiarowanymartwąpodniosłempowiekę\n'
+                            'izarazmogłempieszodotwychświątyńprogu\n'
+                            'iśćzawróconeżyciepodziękowaćbogu\n'
+                            'taknaspowróciszcudemnaojczyznyłono\n'
+                            'tymczasemprzenośmojąduszęutęsknioną\n'
+                            'dotychpagórkówleśnychdotychłąkzielonych\n'
+                            'szerokonadbłękitnymniemnemrozciągnionych\n'
+                            'dotychpólmalowanychzbożemrozmaitem\n'
+                            'wyzłacanychpszenicąposrebrzanychżytem\n'
+                            'gdziebursztynowyświerzopgrykajakśniegbiała\n'
+                            'gdziepanieńskimrumieńcemdzięcielinapała\n'
+                            'awszystkoprzepasanejakbywstęgąmiedzą\n'
+                            'zielonąnaniejzrzadkacichegruszesiedzą\n'
+                            'śródtakichpólprzedlatynadbrzegiemruczaju\n'
+                            'napagórkuniewielkimwebrzozowymgaju\n'
+                            'stałdwórszlacheckizdrzewaleczpodmurowany\n'
+                            'świeciłysięzdalekapobielaneściany\n'
+                            'tymbielszeżeodbiteodciemnejzieleni\n',
+                     'out': 'księga pierwsza\n'
+                            'gospodarstwo\n'
+                            'powrót panicza spotkanie się pierwsze w pokoiku '
+                            'drugie u stołu ważna sędziego nauka o grzeczności '
+                            'podkomorzego uwagi polityczne nad modami początek '
+                            'sporu o kusego i sokoła żale wojskiego ostatni '
+                            'woźny trybunału rzut oka na ówczesny stan '
+                            'polityczny litwy i europy\n'
+                            'litwo ojczyznom o jaty jesteś jak zdrowie\n'
+                            'ile cię trzeba cenić ten tylko się dowie\n'
+                            'kto cię stracił dziś piękność twą w całej '
+                            'ozdobie\n'
+                            'widzę i opisuję bo tęsknię po tobie\n'
+                            'panno święta co jasnej bronisz częstochowy\n'
+                            'i w ostrej świecisz bramie ty co gród zamkowy\n'
+                            'nowogródzki ochraniasz z jego wiernym ludem\n'
+                            'jak mnie dziecko do zdrowia powróciłaś cudem\n'
+                            'gdy od płaczącej matki pod twoją opiekę\n'
+                            'ofiarowany martwą podniosłem powiekę\n'
+                            'i zaraz mogłem pieszo do twych świątyń progu\n'
+                            'iść zawrócone życie podziękować bogu\n'
+                            'tak nas powrócisz cudem na ojczyzny łono\n'
+                            'tymczasem przenoś moją duszę utęsknioną\n'
+                            'do tych pagórków leśnych do tych łąk zielonych\n'
+                            'szeroko nad błękitnym niemnem rozciągnionych\n'
+                            'do tych pól malowanych zbożem rozmaitem\n'
+                            'wyzłacanych pszenicą posrebrzanych żytem\n'
+                            'gdzie bursztynowy świerzop gry kajak śnieg biała\n'
+                            'gdzie panieńskim rumieńcem dzięcielina pała\n'
+                            'a wszystko przepasane jakby wstęgą miedzą\n'
+                            'zieloną na niej z rzadka ciche grusze siedzą\n'
+                            'śród takich pól przed laty nad brzegiem ruczaju\n'
+                            'na pagórku niewielkim we brzozowym gaju\n'
+                            'stał dwór szlachecki z drzewa lecz podmurowany\n'
+                            'świeciły się z daleka pobielane ściany\n'
+                            'tym bielsze że odbite od ciemnej zieleni\n'}],
+          'defaults': {'input_file': 'zad2_input.txt',
+                       'output_file': 'zad2_output.txt',
+                       'timeout': 60},
+          'validator': 'lambda opts, out: perlines_validator(opts, out, '
+                       'zad2_line_compare)'},
+ 'zad4': {'cases': [{'inp': '0010001000 5\n'
+                            '0010001000 4\n'
+                            '0010001000 3\n'
+                            '0010001000 2\n'
+                            '0010001000 1\n'
+                            '0010001000 0\n'
+                            '0010101000 5\n'
+                            '0010101000 4\n'
+                            '0010101000 3\n'
+                            '0010101000 2\n'
+                            '0010101000 1\n'
+                            '0010101000 0\n',
+                     'out': '3\n4\n3\n2\n1\n2\n2\n3\n2\n3\n2\n3\n'},
+                    {'inp': '0000000001 1\n'
+                            '0000000010 1\n'
+                            '1000000000 1\n'
+                            '0100000000 1\n'
+                            '0000000001 2\n',
+                     'out': '0\n0\n0\n0\n1\n'}],
+          'defaults': {'input_file': 'zad4_input.txt',
+                       'output_file': 'zad4_output.txt',
+                       'timeout': 10},
+          'validator': 'perlines_validator'},
+ 'zad5': {'cases': [{'inp': '7 7\n7\n7\n7\n7\n7\n7\n7\n7\n7\n7\n7\n7\n7\n7\n',
+                     'out': '#######\n'
+                            '#######\n'
+                            '#######\n'
+                            '#######\n'
+                            '#######\n'
+                            '#######\n'
+                            '#######\n'},
+                    {'inp': '7 7\n2\n2\n7\n7\n2\n2\n2\n2\n2\n7\n7\n2\n2\n2\n',
+                     'out': '..##...\n'
+                            '..##...\n'
+                            '#######\n'
+                            '#######\n'
+                            '..##...\n'
+                            '..##...\n'
+                            '..##...\n'},
+                    {'inp': '7 7\n2\n2\n7\n7\n2\n2\n2\n4\n4\n2\n2\n2\n5\n5\n',
+                     'out': '##.....\n'
+                            '##.....\n'
+                            '#######\n'
+                            '#######\n'
+                            '.....##\n'
+                            '.....##\n'
+                            '.....##\n'},
+                    {'inp': '7 7\n7\n6\n5\n4\n3\n2\n1\n1\n2\n3\n4\n5\n6\n7\n',
+                     'out': '#######\n'
+                            '.######\n'
+                            '..#####\n'
+                            '...####\n'
+                            '....###\n'
+                            '.....##\n'
+                            '......#\n'},
+                    {'inp': '7 7\n7\n5\n3\n1\n1\n1\n1\n1\n2\n3\n7\n3\n2\n1\n',
+                     'out': '#######\n'
+                            '.#####.\n'
+                            '..###..\n'
+                            '...#...\n'
+                            '...#...\n'
+                            '...#...\n'
+                            '...#...\n'}],
+          'defaults': {'input_file': 'zad5_input.txt',
+                       'output_file': 'zad5_output.txt',
+                       'timeout': 30},
+          'validator': 'perlines_validator'}}
+
 
 
 # Custom comparison functions
@@ -516,9 +395,6 @@ def get_argparser():
         '--cases', default='',
         help='Comma-separated list of test cases to run, e.g. 1,2,3-6.')
     parser.add_argument(
-        '--testset', default='',
-        help='Path to a YAML test set definition.')
-    parser.add_argument(
         '--show_example', default=False, action='store_true',
         help='Print a sample input/output pair.')
     parser.add_argument(
@@ -562,11 +438,8 @@ if __name__ == '__main__':
     parser = get_argparser()
     args = parser.parse_args()
 
-    if args.testset:
-        with open(args.testset) as testset_f:
-            testset = yaml.load(testset_f, Loader=yaml.FullLoader)
-    else:
-        testset = DEFAULT_TESTSET
+    testset = DEFAULT_TESTSET
+    
     if args.problem not in testset:
         print('Problem not known: %s. Choose one of %s.' %
               (args.problem, ', '.join(sorted(testset.keys()))))
