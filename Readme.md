@@ -38,8 +38,15 @@ Term Logic
 Workshop - making a start-up  
 
 ## VI semester 2022/23 (winter)
-[Machine Learning](ML/)  
-Concurrent Programming  
+[Machine Learning](ML/)
+[Algorithmic Causality with Applications](ACwA/)
 Optimization of Deep Neural Networks on IoT Devices  
 Project: Coreforge  
-Software Engineering  
+[Software Engineering](IO/)
+
+## VI semester 2022/23 (summer)
+[Algorithms and Data Structures](AISD/)  
+[Artificial Intelligence](AI/)  
+[Scala in Practice](SiP)  
+From Mordor to Matrix - The Fantastic Political Philosophy  
+[Linux piece by piece](LinuxSeminar/)  
