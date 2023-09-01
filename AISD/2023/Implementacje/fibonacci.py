@@ -15,7 +15,7 @@ def fib_iter(n: int):
     f0, f1 = 0, 1
     if n == 0:
         return f0
-    if n == 1: 
+    if n == 1:
         return f1
     for _ in range(2, n + 1):
         f2 = f0 + f1
@@ -38,8 +38,25 @@ def fib_matrix(n: int):
     return matrix_pow(base_matrix, n)[1][1]
 
 
+N = 2000000
+fib_cache = [-1] * N
+fib_cache[0], fib_cache[1], fib_cache[2] = 0, 1, 1
+
+
+def fib_quick(n):
+    sgn = -1 if n < 0 and n % 2 == 0 else 1
+    n = abs(n)
+    if fib_cache[n] > -1:
+        return sgn * fib_cache[n]
+
+    k = n // 2
+    fk, fk1 = fib_quick(k), fib_quick(k+1)
+    fib_cache[n] = fk1 ** 2 + fk ** 2 if n % 2 else fk * (2 * fk1 - fk)
+    return sgn * fib_cache[n]
+
+
 for i in range(1000):
     a = fib_recursive(i)
     b = fib_iter(i)
     c = fib_matrix(i)
-    assert(a == b and b == c)
+    assert (a == b and b == c)
