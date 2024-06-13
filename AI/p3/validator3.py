@@ -38,8 +38,6 @@ import time
 
 import numpy as np
 
-
-
 VERBOSE = False
 
 # Tests embedded into the validator.

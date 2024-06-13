@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+""#line:5
+import sys  # line:6
+
+M =8 #line:8
+MAX_DEPTH =2 #line:9
+CORNER =8 #line:11
+BAD_CORNER =-3 #line:12
+BC2 =[((0 ,7 ),(1 ,7 )),((0 ,7 ),(0 ,6 )),((0 ,0 ),(1 ,0 )),((0 ,0 ),(0 ,1 )),((7 ,0 ),(7 ,1 )),((7 ,0 ),(6 ,0 )),((7 ,7 ),(6 ,7 )),((7 ,7 ),(7 ,6 ))]#line:24
+INFTY =999999999 #line:26
+import random  # line:28
+import sys  # line:29
+
+
+class Reversi :#line:32
+    M =8 #line:33
+    DIRS =[(0 ,1 ),(1 ,0 ),(-1 ,0 ),(0 ,-1 ),(1 ,1 ),(-1 ,-1 ),(1 ,-1 ),(-1 ,1 )]#line:35
+    def __init__ (O0O0OOO0OO000O0OO ):#line:37
+        O0O0OOO0OO000O0OO .board =O0O0OOO0OO000O0OO .initial_board ()#line:38
+        O0O0OOO0OO000O0OO .fields =set ()#line:39
+        O0O0OOO0OO000O0OO .move_list =[]#line:40
+        O0O0OOO0OO000O0OO .history =[]#line:41
+        for O0O0OO000O0OO0OOO in range (O0O0OOO0OO000O0OO .M ):#line:42
+            for O00OO00O000OO00OO in range (O0O0OOO0OO000O0OO .M ):#line:43
+                if O0O0OOO0OO000O0OO .board [O0O0OO000O0OO0OOO ][O00OO00O000OO00OO ]is None :#line:44
+                    O0O0OOO0OO000O0OO .fields .add ((O00OO00O000OO00OO ,O0O0OO000O0OO0OOO ))#line:45
+    def initial_board (OOO0O000O0O000000 ):#line:47
+        OOOO00OOOOOO0OO00 =[[None ]*OOO0O000O0O000000 .M for _O0O00O0OOOOO00O0O in range (OOO0O000O0O000000 .M )]#line:48
+        OOOO00OOOOOO0OO00 [3 ][3 ]=1 #line:49
+        OOOO00OOOOOO0OO00 [4 ][4 ]=1 #line:50
+        OOOO00OOOOOO0OO00 [3 ][4 ]=0 #line:51
+        OOOO00OOOOOO0OO00 [4 ][3 ]=0 #line:52
+        return OOOO00OOOOOO0OO00 #line:53
+    def draw (O0O0O0OO0O0OOO000 ):#line:55
+        for O0O0OO00O0O0O0O00 in range (O0O0O0OO0O0OOO000 .M ):#line:56
+            OOO0OOO00OO0OOOOO =[]#line:57
+            for O0OO0O00OOOO0OOO0 in range (O0O0O0OO0O0OOO000 .M ):#line:58
+                OOO0OOO00000000OO =O0O0O0OO0O0OOO000 .board [O0O0OO00O0O0O0O00 ][O0OO0O00OOOO0OOO0 ]#line:59
+                if OOO0OOO00000000OO is None :#line:60
+                    OOO0OOO00OO0OOOOO .append ('.')#line:61
+                elif OOO0OOO00000000OO ==1 :#line:62
+                    OOO0OOO00OO0OOOOO .append ('#')#line:63
+                else :#line:64
+                    OOO0OOO00OO0OOOOO .append ('o')#line:65
+            print (''.join (OOO0OOO00OO0OOOOO ))#line:66
+        print ('')#line:67
+    def moves (OO0O0OOO00O000OO0 ,O000OOOO0O0OO00O0 ):#line:69
+        O0OOO0O0OOOO00OO0 =[]#line:70
+        for (OO0OO000O0OO0O0OO ,O00O00OOO000O00OO )in OO0O0OOO00O000OO0 .fields :#line:71
+            if any (OO0O0OOO00O000OO0 .can_beat (OO0OO000O0OO0O0OO ,O00O00OOO000O00OO ,OO00O000000OOO00O ,O000OOOO0O0OO00O0 )for OO00O000000OOO00O in OO0O0OOO00O000OO0 .DIRS ):#line:73
+                O0OOO0O0OOOO00OO0 .append ((OO0OO000O0OO0O0OO ,O00O00OOO000O00OO ))#line:74
+        if O0OOO0O0OOOO00OO0 ==[]:#line:76
+            return [None ]#line:77
+        return O0OOO0O0OOOO00OO0 #line:78
+    def can_beat (O00OO0OOOOO00OO00 ,O0O000O0000O0000O ,OOOO00OOO0O0O0O00 ,O0OO0OO0OO0000000 ,OOOO000OOO00O00O0 ):#line:80
+        OO0O0O0OOOO0000O0 ,O0O0000OO00O0OOO0 =O0OO0OO0OO0000000 #line:81
+        O0O000O0000O0000O +=OO0O0O0OOOO0000O0 #line:82
+        OOOO00OOO0O0O0O00 +=O0O0000OO00O0OOO0 #line:83
+        OO00OOOO0OOO0O0O0 =0 #line:84
+        while O00OO0OOOOO00OO00 .get (O0O000O0000O0000O ,OOOO00OOO0O0O0O00 )==1 -OOOO000OOO00O00O0 :#line:85
+            O0O000O0000O0000O +=OO0O0O0OOOO0000O0 #line:86
+            OOOO00OOO0O0O0O00 +=O0O0000OO00O0OOO0 #line:87
+            OO00OOOO0OOO0O0O0 +=1 #line:88
+        return OO00OOOO0OOO0O0O0 >0 and O00OO0OOOOO00OO00 .get (O0O000O0000O0000O ,OOOO00OOO0O0O0O00 )==OOOO000OOO00O00O0 #line:89
+    def get (O00000OOO00OO000O ,OO0O0O0OOO0O000O0 ,O0OOOOOO0OOOOOOO0 ):#line:91
+        if 0 <=OO0O0O0OOO0O000O0 <O00000OOO00OO000O .M and 0 <=O0OOOOOO0OOOOOOO0 <O00000OOO00OO000O .M :#line:92
+            return O00000OOO00OO000O .board [O0OOOOOO0OOOOOOO0 ][OO0O0O0OOO0O000O0 ]#line:93
+        return None #line:94
+    def do_move (OOO0OO0O00O00OOOO ,OO000OO00OOO0O0OO ,O0O000O0OOOOO0O0O ):#line:96
+        assert O0O000O0OOOOO0O0O ==len (OOO0OO0O00O00OOOO .move_list )%2 #line:97
+        OOO0OO0O00O00OOOO .history .append ([OOOO0OO0O0O0O0OOO [:]for OOOO0OO0O0O0O0OOO in OOO0OO0O00O00OOOO .board ])#line:98
+        OOO0OO0O00O00OOOO .move_list .append (OO000OO00OOO0O0OO )#line:99
+        if OO000OO00OOO0O0OO is None :#line:101
+            return #line:102
+        OO00O0OO0OOOOOO00 ,OO000OOOO0O0000O0 =OO000OO00OOO0O0OO #line:103
+        OOOOOO00O0000O00O ,OOO00OOO00OO0OO0O =OO000OO00OOO0O0OO #line:104
+        OOO0OO0O00O00OOOO .board [OO000OOOO0O0000O0 ][OO00O0OO0OOOOOO00 ]=O0O000O0OOOOO0O0O #line:105
+        OOO0OO0O00O00OOOO .fields -=set ([OO000OO00OOO0O0OO ])#line:106
+        for O00O00OOO0OOO000O ,O0OO0O0000O0O0O0O in OOO0OO0O00O00OOOO .DIRS :#line:107
+            OO00O0OO0OOOOOO00 ,OO000OOOO0O0000O0 =OOOOOO00O0000O00O ,OOO00OOO00OO0OO0O #line:108
+            O00000OOOOOO0O00O =[]#line:109
+            OO00O0OO0OOOOOO00 +=O00O00OOO0OOO000O #line:110
+            OO000OOOO0O0000O0 +=O0OO0O0000O0O0O0O #line:111
+            while OOO0OO0O00O00OOOO .get (OO00O0OO0OOOOOO00 ,OO000OOOO0O0000O0 )==1 -O0O000O0OOOOO0O0O :#line:112
+                O00000OOOOOO0O00O .append ((OO00O0OO0OOOOOO00 ,OO000OOOO0O0000O0 ))#line:113
+                OO00O0OO0OOOOOO00 +=O00O00OOO0OOO000O #line:114
+                OO000OOOO0O0000O0 +=O0OO0O0000O0O0O0O #line:115
+            if OOO0OO0O00O00OOOO .get (OO00O0OO0OOOOOO00 ,OO000OOOO0O0000O0 )==O0O000O0OOOOO0O0O :#line:116
+                for (OO0OOOO000000OOO0 ,O0O0O0O0O00OOO000 )in O00000OOOOOO0O00O :#line:117
+                    OOO0OO0O00O00OOOO .board [O0O0O0O0O00OOO000 ][OO0OOOO000000OOO0 ]=O0O000O0OOOOO0O0O #line:118
+    def result (OOOOO0OOOO00O0O0O ):#line:120
+        O000OO00O0O0OOOOO =0 #line:121
+        for OO00OOOO0OO00O00O in range (OOOOO0OOOO00O0O0O .M ):#line:122
+            for OOOOO0OOOOO0O00O0 in range (OOOOO0OOOO00O0O0O .M ):#line:123
+                OOOO000O0O0OOOOOO =OOOOO0OOOO00O0O0O .board [OO00OOOO0OO00O00O ][OOOOO0OOOOO0O00O0 ]#line:124
+                if OOOO000O0O0OOOOOO ==0 :#line:125
+                    O000OO00O0O0OOOOO -=1 #line:126
+                elif OOOO000O0O0OOOOOO ==1 :#line:127
+                    O000OO00O0O0OOOOO +=1 #line:128
+        return O000OO00O0O0OOOOO #line:129
+    def terminal (O000OOO00OO0OO0OO ):#line:131
+        if not O000OOO00OO0OO0OO .fields :#line:132
+            return True #line:133
+        if len (O000OOO00OO0OO0OO .move_list )<2 :#line:134
+            return False #line:135
+        return O000OOO00OO0OO0OO .move_list [-1 ]is None and O000OOO00OO0OO0OO .move_list [-2 ]is None #line:136
+    def in_corner (OO00O000O00O000O0 ,O00000OO0O0O0OOO0 ):#line:138
+        O0000000OO0OO0000 =0 #line:139
+        for O0O0O0O0O000000O0 ,O00OO00OO0OOOOOO0 in [(0 ,7 ),(0 ,0 ),(7 ,0 ),(7 ,7 )]:#line:140
+            if OO00O000O00O000O0 .board [O00OO00OO0OOOOOO0 ][O0O0O0O0O000000O0 ]==O00000OO0O0O0OOO0 :#line:141
+                O0000000OO0OO0000 +=1 #line:142
+        return O0000000OO0OO0000 #line:143
+    def bad_corner (OO0OO00OO0OOO0000 ,O00O00OO00O0OOOOO ):#line:145
+        OO000O0000OO0O0OO =0 #line:146
+        for O0OO00O0000000O0O ,O0O00000OOO0OO00O in [((0 ,7 ),(1 ,6 )),((0 ,0 ),(1 ,1 )),((7 ,0 ),(6 ,1 )),((7 ,7 ),(6 ,6 ))]+BC2 :#line:151
+            O00O00O00OO0000OO ,OOO0000OOO00OOO00 =O0OO00O0000000O0O #line:152
+            OO00O00O00O0OOOOO ,O000O00000000O000 =O0O00000OOO0OO00O #line:153
+            if OO0OO00OO0OOO0000 .board [O000O00000000O000 ][OO00O00O00O0OOOOO ]==O00O00OO00O0OOOOO and OO0OO00OO0OOO0000 .board [OOO0000OOO00OOO00 ][O00O00O00OO0000OO ]==None :#line:154
+                OO000O0000OO0O0OO +=1 #line:155
+        return OO000O0000OO0O0OO #line:156
+    def score (O0O0OO000OOOO0O0O ):#line:158
+        OOO0OOOOOOOOO0O0O =O0O0OO000OOOO0O0O .result ()#line:159
+        OOO0OOOOOOOOO0O0O -=CORNER *O0O0OO000OOOO0O0O .in_corner (0 )#line:161
+        OOO0OOOOOOOOO0O0O +=CORNER *O0O0OO000OOOO0O0O .in_corner (1 )#line:162
+        OOO0OOOOOOOOO0O0O -=BAD_CORNER *O0O0OO000OOOO0O0O .bad_corner (0 )#line:164
+        OOO0OOOOOOOOO0O0O +=BAD_CORNER *O0O0OO000OOOO0O0O .bad_corner (1 )#line:165
+        return OOO0OOOOOOOOO0O0O #line:166
+    def undo_last_move (O0O0000OOO000OOO0 ):#line:168
+        OOO0O000OOOO00O00 =O0O0000OOO000OOO0 .move_list [-1 ]#line:169
+        O0O0000OOO000OOO0 .board =O0O0000OOO000OOO0 .history [-1 ]#line:170
+        del O0O0000OOO000OOO0 .history [-1 ]#line:171
+        del O0O0000OOO000OOO0 .move_list [-1 ]#line:172
+        if OOO0O000OOOO00O00 !=None :#line:173
+            O0O0000OOO000OOO0 .fields .add (OOO0O000OOOO00O00 )#line:174
+    def minmax (OO0O000OOOOO00000 ,O00O0OO0OOO00O0OO ,O0000O0000O00OO0O ):#line:177
+        if OO0O000OOOOO00000 .terminal ():#line:178
+            return OO0O000OOOOO00000 .result ()#line:179
+        if O0000O0000O00OO0O ==0 :#line:180
+            return OO0O000OOOOO00000 .score ()#line:181
+        OOO00OOOOOO0O000O =[]#line:183
+        for O000O000OO000OO0O in OO0O000OOOOO00000 .moves (O00O0OO0OOO00O0OO ):#line:185
+            OO0O000OOOOO00000 .do_move (O000O000OO000OO0O ,O00O0OO0OOO00O0OO )#line:186
+            OOO00OOOOOO0O000O .append (OO0O000OOOOO00000 .minmax (1 -O00O0OO0OOO00O0OO ,O0000O0000O00OO0O -1 ))#line:187
+            OO0O000OOOOO00000 .undo_last_move ()#line:188
+        if len (OOO00OOOOOO0O000O )==0 :#line:190
+            return None #line:191
+        if O00O0OO0OOO00O0OO ==1 :#line:193
+            return max (OOO00OOOOOO0O000O )#line:194
+        else :#line:195
+            return min (OOO00OOOOOO0O000O )#line:196
+    def max_value (OOOO00O0OO0000OOO ,O00OOOOO000O0O000 ,OO0O0O0O000000000 ,OO00O0O0OO00O00OO ):#line:200
+        if OOOO00O0OO0000OOO .terminal ():return utility (state )#line:201
+        if OO00O0O0OO00O00OO ==0 :return OOOO00O0OO0000OOO .score ()#line:202
+        OOOOOO0OOOO0OO00O =-INFTY #line:203
+        for O0OO00O000OO00000 in OOOO00O0OO0000OOO .moves (player ):#line:205
+            OOOO00O0OO0000OOO .do_move (O0OO00O000OO00000 ,player )#line:206
+            OOOOOO0OOOO0OO00O =max (OOOOOO0OOOO0OO00O ,OOOO00O0OO0000OOO .min_value (O00OOOOO000O0O000 ,OO0O0O0O000000000 ,OO00O0O0OO00O00OO -1 ))#line:207
+            OOOO00O0OO0000OOO .undo_last_move ()#line:208
+            if OOOOOO0OOOO0OO00O >=OO0O0O0O000000000 :#line:210
+                return OOOOOO0OOOO0OO00O #line:211
+            O00OOOOO000O0O000 =max (O00OOOOO000O0O000 ,OOOOOO0OOOO0OO00O )#line:212
+        return OOOOOO0OOOO0OO00O #line:213
+    def min_value (OO000O000O00O0OO0 ,OO0OOOO0O0OOOO00O ,O0000O0O0OO000OOO ,OO0000O0OO000O0OO ):#line:216
+        if OO000O000O00O0OO0 .terminal ():return utility (state )#line:217
+        if OO0000O0OO000O0OO ==0 :return OO000O000O00O0OO0 .score ()#line:218
+        OO0O00000O00OOO0O =+INFTY #line:219
+        for OO0OO0O00O00O0OOO in OO000O000O00O0OO0 .moves (player ):#line:221
+            OO000O000O00O0OO0 .do_move (OO0OO0O00O00O0OOO ,player )#line:222
+            OO0O00000O00OOO0O =min (OO0O00000O00OOO0O ,OO000O000O00O0OO0 .min_value (OO0OOOO0O0OOOO00O ,O0000O0O0OO000OOO ,OO0000O0OO000O0OO -1 ))#line:223
+            OO000O000O00O0OO0 .undo_last_move ()#line:224
+            if OO0O00000O00OOO0O <=OO0OOOO0O0OOOO00O :#line:226
+                return OO0O00000O00OOO0O #line:227
+            O0000O0O0OO000OOO =min (O0000O0O0OO000OOO ,OO0O00000O00OOO0O )#line:228
+        return OO0O00000O00OOO0O #line:230
+    def best_move (O0OOOOOOOO000000O ,O0000O00O00O00OO0 ,O0000O00O00O0O0O0 ):#line:232
+        OOOOOOO00OO00OOOO =[]#line:233
+        for OOOO0OO000000000O in O0OOOOOOOO000000O .moves (O0000O00O00O00OO0 ):#line:234
+            O0OOOOOOOO000000O .do_move (OOOO0OO000000000O ,O0000O00O00O00OO0 )#line:235
+            OOOOOOO00OO00OOOO .append ((O0OOOOOOOO000000O .minmax (1 -O0000O00O00O00OO0 ,O0000O00O00O0O0O0 ),OOOO0OO000000000O ))#line:236
+            O0OOOOOOOO000000O .undo_last_move ()#line:237
+        if O0000O00O00O00OO0 ==1 :#line:238
+            OO0O0O0O0O0OOOOO0 ,O00O00O0O0OOOOO00 =max (OOOOOOO00OO00OOOO )#line:239
+        else :#line:240
+            OO0O0O0O0O0OOOOO0 ,O00O00O0O0OOOOO00 =min (OOOOOOO00OO00OOOO )#line:241
+        OOO00OOO00000OOO0 =[OO00O00OO000O0O00 for (OOO00O00OOOO0O00O ,OO00O00OO000O0O00 )in OOOOOOO00OO00OOOO if OOO00O00OOOO0O00O ==OO0O0O0O0O0OOOOO0 ]#line:243
+        return random .choice (OOO00OOO00000OOO0 )#line:245
+class Player (object ):#line:249
+    def __init__ (OO0O000O0OO0OOO00 ):#line:250
+        OO0O000O0OO0OOO00 .reset ()#line:251
+    def reset (OOOOO0OOO0OOOOO00 ):#line:253
+        OOOOO0OOO0OOOOO00 .game =Reversi ()#line:254
+        OOOOO0OOO0OOOOO00 .my_player =1 #line:255
+        OOOOO0OOO0OOOOO00 .say ('RDY')#line:256
+    def say (O0O00O00OO00OO0OO ,O00O000O000O00O0O ):#line:258
+        sys .stdout .write (O00O000O000O00O0O )#line:259
+        sys .stdout .write ('\n')#line:260
+        sys .stdout .flush ()#line:261
+    def hear (OOO0000O0O0OOOOOO ):#line:263
+        OO00OOOOOOO0O0OOO =sys .stdin .readline ().split ()#line:264
+        return OO00OOOOOOO0O0OOO [0 ],OO00OOOOOOO0O0OOO [1 :]#line:265
+    def loop (O000OOOOO0O00O0O0 ):#line:267
+        while True :#line:268
+            OOO0000O0OOO0OO0O ,OOOO000OOO0OOOOO0 =O000OOOOO0O00O0O0 .hear ()#line:269
+            if OOO0000O0OOO0OO0O =='HEDID':#line:270
+                OO0O0000O0OO000OO ,O00O0O000O0OOOO00 =OOOO000OOO0OOOOO0 [:2 ]#line:271
+                O0OO0O0000O00OOOO =tuple ((int (OOOOO0OO0O00O000O )for OOOOO0OO0O00O000O in OOOO000OOO0OOOOO0 [2 :]))#line:272
+                if O0OO0O0000O00OOOO ==(-1 ,-1 ):#line:273
+                    O0OO0O0000O00OOOO =None #line:274
+                O000OOOOO0O00O0O0 .game .do_move (O0OO0O0000O00OOOO ,1 -O000OOOOO0O00O0O0 .my_player )#line:275
+            elif OOO0000O0OOO0OO0O =='ONEMORE':#line:276
+                O000OOOOO0O00O0O0 .reset ()#line:277
+                continue #line:278
+            elif OOO0000O0OOO0OO0O =='BYE':#line:279
+                break #line:280
+            else :#line:281
+                assert OOO0000O0OOO0OO0O =='UGO'#line:282
+                assert not O000OOOOO0O00O0O0 .game .move_list #line:283
+                O000OOOOO0O00O0O0 .my_player =0 #line:284
+            O0OO0O0000O00OOOO =O000OOOOO0O00O0O0 .game .best_move (O000OOOOO0O00O0O0 .my_player ,MAX_DEPTH )#line:286
+            O000OOOOO0O00O0O0 .game .do_move (O0OO0O0000O00OOOO ,O000OOOOO0O00O0O0 .my_player )#line:287
+            if O0OO0O0000O00OOOO ==None :#line:288
+                O0OO0O0000O00OOOO =(-1 ,-1 )#line:289
+            O000OOOOO0O00O0O0 .say ('IDO %d %d'%O0OO0O0000O00OOOO )#line:291
+if __name__ =='__main__':#line:294
+    player =Player ()#line:295
+    player .loop ()

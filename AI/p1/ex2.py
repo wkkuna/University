@@ -2,7 +2,7 @@
 # from the longest possible word.
 # Using a list of length of the text we save
 # splitted word of maximum square sum (so far)
-# at the begining index of a first word in a current
+# at the beginning index of a first word in a current
 # sequence.
 # The whole text with word split maximizing
 # square sum is at the index 0 of the list.
@@ -14,17 +14,15 @@ def read_dictionary():
         dt = list(f.read().splitlines())
     return list(filter(len, dt))
 
+
 # Square sum of word length
-
-
 def sqr_sum(words):
     return sum(map(lambda x: len(x)**2, words))
 
+
 # Chose the word that:
 # a) exists in a dictionary
-# b) maximalizes word length square sum
-
-
+# b) maximizes word length square sum
 def best_fit(text, dictionary):
     n = len(text)
     if n == 0:
@@ -53,8 +51,8 @@ def best_fit(text, dictionary):
 
 
 def separate_text(text, dictionary):
-    simplfied_dict = [word for word in dictionary if word in text]
-    return best_fit(text, simplfied_dict)
+    simplified_dict = [word for word in dictionary if word in text]
+    return best_fit(text, simplified_dict)
 
 
 if __name__ == "__main__":

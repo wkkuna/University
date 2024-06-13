@@ -1,412 +1,167 @@
-import numpy as np
-import copy
+#!/usr/bin/env python3
 import random
 
-MAP = None
-DEN_0 = (3, 0)
-DEN_1 = (3, 8)
-DIR = [(0, 1), (1, 0), (-1, 0), (0, -1)]
-MAX_TO_DRAW = 30
-
-start_down = """
-..#1#..
-...#...
-.......
-.~~.~~.
-.~~.~~.
-.~~.~~.
-.......
-...#...
-..#0#..
-"""
-
-start_up = """
-L.....T
-.D...C.
-R.J.W.E
-.......
-.......
-.......
-e.w.j.r
-.c...d.
-t.....l
-"""
-
-GRASS = 2
-WATER = 3
-TRAP = 4
+directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+MAX_ITER = 300
+WIDTH, HEIGHT = 7, 9
+red, blue = range(2)
+φ = None
+# 0    1    2     3      4       5      6      7
+rat, cat, dog, wolf, leopard, tiger, lion, elephant = range(8)
 
 
-draw_down = {0: '*',
-             1: '*',
-             2: '.',
-             3: '~',
-             4: '#'}
-
-draw_down_rev = {v: k for k, v in draw_down.items()}
-
-draw_up = {0: '.',
-           1: 'r',
-           -1: 'R',
-           2: 'c',
-           -2: 'C',
-           3: 'd',
-           -3: 'D',
-           4: 'w',
-           -4: 'W',
-           5: 'j',
-           -5: 'J',
-           6: 't',
-           -6: 'T',
-           7: 'l',
-           -7: 'L',
-           8: 'e',
-           -8: 'E'}
-
-draw_up_rev = {v: k for k, v in draw_up.items()}
+def opponent(player): return blue if player == red else red
 
 
-def build_board():
-    board_up = np.zeros((7, 9), dtype='int8')
-    for x, row in enumerate(start_up.split()):
-        for y, letter in enumerate(row):
-            board_up[y][x] = draw_up_rev[letter]
-    return board_up
+class Jungle:
+    def __init__(self):
+        self.board = [[(blue, 6), φ, φ, φ, φ, φ, (blue, 5)],
+                      [φ, (blue, 2), φ, φ, φ, (blue, 1), φ],
+                      [(blue, 0), φ, (blue, 4), φ, (blue, 3), φ, (blue, 7)],
+                      [φ, φ, φ, φ, φ, φ, φ],
+                      [φ, φ, φ, φ, φ, φ, φ],
+                      [φ, φ, φ, φ, φ, φ, φ],
+                      [(red, 7), φ, (red, 3), φ, (red, 4), φ, (red, 0)],
+                      [φ, (red, 1), φ, φ, φ, (red, 2), φ],
+                      [(red, 5), φ, φ, φ, φ, φ, (red, 6)]]
 
+        self.counter = 0
+        self.traps = {(2, 0), (4, 0), (3, 1), (3, 7), (2, 8), (4, 8)}
+        self.dens = [(3, 8), (3, 0)]
+        self.ponds = {(1, 3), (2, 3), (4, 3), (5, 3), (1, 4),
+                      (2, 4), (4, 4), (5, 4), (1, 5), (2, 5), (4, 5), (5, 5)}
+        self.pieces = {red: {}, blue: {}}
 
-def init_map():
-    global MAP
-    MAP = np.zeros((7, 9), dtype='int8')
-    for y, row in enumerate(start_down.split()):
-        for x, letter in enumerate(row):
-            if letter == '0':
-                MAP[x][y] = 0
-            elif letter == '1':
-                MAP[x][y] = 1
-            else:
-                MAP[x][y] = draw_down_rev[letter]
+        # Keep track of the pieces
+        for y in range(HEIGHT):
+            for x in range(WIDTH):
+                if self.board[y][x]:
+                    player, animal = self.board[y][x]
+                    self.pieces[player][animal] = (x, y)
 
+    # Check if opponent's rat is blocking the entrance to the pond
+    def can_enter_pond(self, pos, new_pos, player):
+        (x0, y0), (x1, y1) = pos, new_pos
+        dx = abs(x0 - x1)
+        dy = abs(y0 - y1)
 
-def info(board_up):
-    for y in range(9):
-        for x in range(7):
-            if board_up[x][y] == 0:
-                print(draw_down[MAP[x][y]], end='')
-            else:
-                print(draw_up[board_up[x][y]], end='')
-        print()
-
-
-class State:
-
-    def __init__(self, board, animals, player, idle):
-        self.board = copy.deepcopy(board)
-        self.player = copy.deepcopy(player)
-        self.idle = copy.deepcopy(idle)
-        self.animals = copy.deepcopy(animals)
-        self.opponent = 1 - self.player
-
-    def info(self):
-        print('=========')
-        print('Player:', self.player, 'Idle:', self.idle)
-        info(self.board)
-        print('=========')
-
-    def terminal(self):  # CHECK IF STATE IS TERMINAL
-        if self.idle == 0:
+        if rat not in self.pieces[opponent(player)]:
             return True
-        if self.board[DEN_0[0]][DEN_0[1]] > 0:
-            return True
-        if self.board[DEN_1[0]][DEN_1[1]] < 0:
-            return True
-        return False
 
-    def result(self):
-        if self.idle == 0:
-            player0 = []
-            player1 = []
-            for ani in self.animals:
-                if ani > 0:
-                    player0.append(ani)
-                else:
-                    player1.append(ani)
-                player1 = [abs(x) for x in player1]
-            player0.sort()
-            player1.sort()
-            short = min(len(player0), len(player1))
-            for i in range(short):
-                if player0[i] > player1[i]:
-                    return 0
-                if player0[i] < player1[i]:
-                    return 1
-            return -1
-        if self.is_occupied((3, 8)):
-            return 1
-        if self.is_occupied((3, 0)):
-            return 0
-        return self.opponent
+        rx, ry = self.pieces[opponent(player)][rat]
 
-    def remove_animal(self, animal_pos):
-        x, y = animal_pos
-        to_remove = self.board[x][y]
-        self.board[x][y] = 0
-        del self.animals[to_remove]
-
-    def n_tiles(self, position):
-        x, y = position
-        tiles = []
-        for d_x, d_y in DIR:
-            if 0 <= x + d_x < 7 and 0 <= y + d_y < 9:
-                if (self.player == 0 and (x + d_x, y + d_y) != (3, 8)) or\
-                   (self.player == 1 and (x + d_x, y + d_y) != (3, 0)):
-                    tiles.append((x + d_x, y + d_y))
-        return tiles
-
-    def push(self, animal, place):
-        old_x, old_y = self.animals[animal]
-        self.remove_animal((old_x, old_y))
-        self.animals[animal] = place
-        self.board[place[0]][place[1]] = animal
-
-    def non_water(self, tiles):
-        new_tiles = []
-        for x, y in tiles:
-            if MAP[x][y] != WATER:
-                new_tiles.append((x, y))
-        return new_tiles
-
-    def can_beat(self, animal1, field):
-        animal2 = self.board[field[0]][field[1]]
-        if animal1 * animal2 > 0:
+        if dx and y0 == ry and abs(x0 - rx) <= 2 and abs(x1 - rx) <= 2:
             return False
-        if MAP[field[0]][field[1]] == TRAP:
+
+        if dy and x0 == rx:
+            return False
+
+        return True
+
+    def is_stronger(self, curr_animal, other_animal,  pos,  new_pos):
+        if pos in self.ponds and new_pos in self.ponds:
+            return False
+        if pos in self.ponds:
+            return False
+        if new_pos in self.traps:
             return True
-        first = abs(animal1)
-        second = abs(animal2)
-        if (animal1 == -1 and animal2 == 8) or (animal1 == 1 and animal2 == -8):
+        if curr_animal == rat and other_animal == elephant:
             return True
-        return first >= second
+        if curr_animal == elephant and other_animal == rat:
+            return False
+        return curr_animal >= other_animal
 
-    def is_water(self, tile):
-        x, y = tile
-        return MAP[x][y] == WATER
+    def possible_moves(self, player):
+        moves = []
+        for curr_animal, curr_pos in self.pieces[player].items():
+            x, y = curr_pos
+            for dx, dy in directions:
+                x0, y0 = x + dx, y + dy
+                new_pos = (x0, y0)
 
-    def is_occupied(self, tile):
-        x, y = tile
-        return self.board[x][y] != 0
+                if x0 in range(0, WIDTH) and y0 in range(0, HEIGHT):
+                    # No point in going to our own den
+                    if new_pos == self.dens[player]:
+                        continue
 
-    def value(self):  # POSITIVE FOR PLAYER 0, NEGATIVE FOR PLAYER 1
-        fitness = 0
+                    if new_pos in self.ponds:
+                        # Only rat can enter the pond
+                        # Only lion and tiger can jump through the pond
+                        if curr_animal not in (rat, lion, tiger):
+                            continue
 
-        des0 = (3, 0)
-        des1 = (3, 8)
+                        if curr_animal in [lion, tiger]:
+                            # Calculate the new position after jumping
+                            # through the pond
+                            dx, dy = 3 * dx, 4 * dy
+                            new_pos = (x + dx, y + dy)
+                            # Cannot enter the pond if the rat's inside it
+                            if not self.can_enter_pond(curr_pos, new_pos, player):
+                                continue
 
-        def dist(animal):
-            if animal > 0:
-                des = des0
-            else:
-                des = des1
-            ani_x, ani_y = self.animals[animal]
-            des_x, des_y = des
-            return abs(ani_x - des_x) + abs(ani_y - des_y)
+                    if self.board[y0][x0]:
+                        other_player, other_animal = self.board[y0][x0]
+                        # If it's our piece on the new position, we cannot move there
+                        if other_player == player:
+                            continue
+                        # If there's opponent's animal and is stronger than us there's no point
+                        # moving there
+                        if not self.is_stronger(curr_animal, other_animal, curr_pos, new_pos):
+                            continue
+                    # Otherwise, legal move
+                    moves.append((curr_pos, new_pos))
+        return moves
 
-        figures = {-1: -3,
-                   -2: -2,
-                   -3: -3,
-                   -4: -4,
-                   -5: -5,
-                   -6: -6,
-                   -7: -7,
-                   -8: -7,
-                   1: 3,
-                   2: 2,
-                   3: 3,
-                   4: 4,
-                   5: 5,
-                   6: 6,
-                   7: 7,
-                   8: 7}
-        if self.is_occupied((3, 0)):
-            fitness += 1000
-        if self.is_occupied((3, 8)):
-            fitness -= 1000
+    def compare_pieces(self):
+        for i in range(7, -1, -1):
+            res = 0
+            res -= 1 if i in self.pieces[red] else 0
+            res += 1 if i in self.pieces[blue] else 0
+            if res:
+                return res
+        return 0
 
-        for animal in [-8, -7, -6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8]:
-            if animal in self.animals:
-                fitness += 2 * figures[animal]
-        fitness += sum([dist(x) for x in self.animals if x < 0]) - sum([dist(x) for x in self.animals if x > 0])
-        return fitness
+    def is_over(self):
+        # Any of the players is out of their pieces
+        if not len(self.pieces[blue]):
+            return red
+        if not len(self.pieces[red]):
+            return blue
 
-    def moves(self):  # TODO: RETURN ALL adjacent states
-        new_states = []
-        if self.player == 0:
-            rat = 1
-        else:
-            rat = -1
-        if rat in self.animals:
-            x, y = self.animals[rat]
-            for tile in self.n_tiles(self.animals[rat]):
-                if self.is_occupied(tile):
-                    if MAP[x][y] != WATER and self.can_beat(rat, tile):
-                        new_state = State(self.board, self.animals, self.opponent, MAX_TO_DRAW)
-                        new_state.remove_animal((tile[0], tile[1]))
-                        new_state.push(rat, tile)
-                        new_states.append(new_state)
-                else:
-                    new_state = State(self.board, self.animals, self.opponent, self.idle - 1)
-                    new_state.push(rat, tile)
-                    new_states.append(new_state)
-        if self.player == 0:
-            normal = [2, 3, 4, 5, 6, 7, 8]
-        else:
-            normal = [-2, -3, -4, -5, -6, -7, -8]
-        for ani in normal:
-            if ani in self.animals:
-                for tile in self.non_water(self.n_tiles(self.animals[ani])):
-                    if self.is_occupied(tile):
-                        if self.can_beat(ani, tile):
-                            new_state = State(self.board, self.animals, self.opponent, MAX_TO_DRAW)
-                            new_state.remove_animal((tile[0], tile[1]))
-                            new_state.push(ani, tile)
-                            new_states.append(new_state)
-                    else:
-                        new_state = State(self.board, self.animals, self.opponent, self.idle - 1)
-                        new_state.push(ani, tile)
-                        new_states.append(new_state)
-        if self.player == 0:
-            predators = [6, 7]
-        else:
-            predators = [-6, -7]
-        for predator in predators:
-            if predator in self.animals:
-                x, y = self.animals[predator]
-                for tile in [t for t in self.n_tiles(self.animals[predator]) if self.is_water(t)]:
-                    vec_x, vec_y = tile[0] - x, tile[1] - y
-                    flag = True
-                    i = 1
-                    while MAP[x + i * vec_x][y + i * vec_y] == WATER:
-                        if self.board[x + i * vec_x][y + i * vec_y] == 0 or\
-                           self.board[x + i * vec_x][y + i * vec_y] == rat:
-                            pass
-                        else:
-                            flag = False
-                            break
-                        i += 1
-                    if flag:
-                        des_x, des_y = x + i * vec_x, y + i * vec_y
-                        des = des_x, des_y
-                        if self.is_occupied(des):
-                            if self.can_beat(predator, des):
-                                new_state = State(self.board, self.animals, self.opponent, MAX_TO_DRAW)
-                                new_state.remove_animal(des)
-                                new_state.push(predator, des)
-                                new_states.append(new_state)
-                        else:
-                            new_state = State(self.board, self.animals, self.opponent, self.idle - 1)
-                            new_state.push(predator, des)
-                            new_states.append(new_state)
+        x0, y0 = self.dens[red]
+        x1, y1 = self.dens[blue]
+        # The den has been reached by opposing player
+        if self.board[y0][x0]:
+            return blue
+        if self.board[y1][x1]:
+            return red
 
-        return new_states
+        # Limit of iterations reached
+        if MAX_ITER <= self.counter:
+            # Give the win to the player with the strongest piece remaining
+            diff = self.compare_pieces()
+            return diff if diff in [red, blue] else red
+        # Not terminal
+        return -1
 
+    def move(self, move):
+        self.counter += 1
+        # NOOP
+        if not move:
+            return φ
 
-def initial_state(player):
-    new_board = build_board()
-    new_player = player
-    new_idle = MAX_TO_DRAW
-    animals = {}
-    for x, row in enumerate(new_board):
-        for y, letter in enumerate(row):
-            if new_board[x][y] != 0:
-                animals[new_board[x][y]] = (x, y)
+        (x, y), (nx, ny) = move
 
-    return State(new_board, animals, new_player, new_idle)
+        p0, a0 = self.board[y][x]
+        if self.board[ny][nx]:
+            p1, a1 = self.board[ny][nx]
+            del self.pieces[p1][a1]
 
+        self.pieces[p0][a0] = (nx, ny)
+        self.board[y][x] = φ
+        self.board[ny][nx] = (p0, a0)
+        return f"{x} {y} {nx} {ny}"
 
-def random_game(state, starting_player):
-    local = copy.deepcopy(state)
-    acc = 0
-    while not local.terminal():
-        acc += 1
-        all_moves = local.moves()
-        if all_moves:
-            local = random.choice(all_moves)
-        else:
-            break
-    res = local.result()
-    if res == -1:
-        return 1 - starting_player, acc
-    else:
-        return res, acc
-
-
-def multi(state, starting_player):
-    LIMIT = 20000
-    local = copy.deepcopy(state)
-    options = {}
-    for m in local.moves():
-        options[m] = 0
-    acc = 0
-    while acc < LIMIT:
-        for m in options:
-            if acc >= LIMIT:
-                break
-            win, n = random_game(m, starting_player)
-            options[m] += win
-            acc += n
-    return max(options, key=lambda s: options[s])
-
-
-def game(debug=False):
-    starting_player = 1 if random.random() > 0.5 else 0
-    start = initial_state(starting_player)
-    state = start
-    if debug:
-        state.info()
-    while not state.terminal():
-        if state.player == 0:
-            all_moves = state.moves()
-            if all_moves:
-                state = max(all_moves, key=lambda s: s.value())
-            else:
-                break
-        else:
-            state = multi(state, starting_player)
-            if not state:
-                break
-        if debug:
-            state.info()
-    if debug:
-        state.info()
-    res = state.result()
-    if res == -1:
-        return 1 - starting_player
-    else:
-        return res
-
-
-init_map()
-
-player0 = 0
-player1 = 0
-'''
-test = initial_state(1)
-test.board[2][1] = -1
-test.board[0][2] = 0
-test.animals[-1] = (2, 1)
-test.remove_animal((0, 8))
-test.board[3][2] = 1
-test.animals[6] = 3, 1
-test.board[3][1] = 6
-test.info()
-ms = test.moves()
-for m in ms:
-    m.info()
-'''
-for i in range(100):
-    score = game(debug=True)
-    if score == 0:
-        player0 += 1
-    if score == 1:
-        player1 += 1
-    print('SINGLE GAME WON BY:', score)
-print('P0:', player0, 'P1:', player1)
+    def get_random_move(self, player):
+        moves = self.possible_moves(player)
+        return φ if not len(moves) else random.choice(moves)

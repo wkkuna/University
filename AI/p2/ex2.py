@@ -44,6 +44,7 @@ def calculate_distances():
 
     return distances
 
+
 # We want as little moves as possible
 def heuristic(start_state, distances):
     return sum([distances[crate[0]][crate[1]] for crate in start_state[0]])
@@ -62,7 +63,8 @@ def generate_states(state):
             if new_pos not in crates:
                 new_states.append(
                     [crates, new_pos, state[2] + direction_to_str[dxy]])
-            # Some dead state detection
+            # Dead state detection
+            # TODO: This can be done statically
             elif one_ahead not in crates and not is_wall(*one_ahead):
                 crates.remove(new_pos)
                 crates.add((new_pos[0] + dxy[0], new_pos[1] + dxy[1]))

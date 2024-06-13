@@ -1,6 +1,8 @@
-from numpy import array, dstack, all, zeros, ones, any, where
 from copy import deepcopy
-from ex1 import generate_seqs, draw_puzzle
+
+from ex1 import draw_puzzle, generate_seqs
+from numpy import all, any, array, dstack, ones, where, zeros
+
 
 def to_file(nonogram):
     with open("zad_output.txt", "w") as out:
@@ -8,7 +10,8 @@ def to_file(nonogram):
         out.write(output)
     return output
 
-def reduce_posibilities(idx, space, nonogram, is_row):
+
+def reduce_possibilities(idx, space, nonogram, is_row):
     solvable = True
     changed = False
     block = nonogram[idx, :] if is_row else nonogram[:, idx]
@@ -49,6 +52,7 @@ def reduce_posibilities(idx, space, nonogram, is_row):
 
     return changed, solvable
 
+
 def deduce(nonogram, rspace, cspace):
     height, width = nonogram.shape
     changed = True
@@ -56,11 +60,11 @@ def deduce(nonogram, rspace, cspace):
         changed = False
         solvable = True
         for i in range(height):
-            c, p = reduce_posibilities(i, rspace, nonogram, True)
+            c, p = reduce_possibilities(i, rspace, nonogram, True)
             changed |= c
             solvable &= p
         for i in range(width):
-            c, p = reduce_posibilities(i, cspace, nonogram, False)
+            c, p = reduce_possibilities(i, cspace, nonogram, False)
             changed |= c
             solvable &= p
     return solvable
@@ -116,5 +120,5 @@ if __name__ == "__main__":
         nonogram = zeros((h, w), dtype="int64") - 1
         rspace = [array(generate_seqs(w, row)) for row in rspecs]
         cspace = [array(generate_seqs(h, column)) for column in cspecs]
-        
+
         solve(nonogram, rspace, cspace)

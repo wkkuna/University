@@ -45,9 +45,11 @@ def print_chessboard(bk, wk, wr):
     if args.debug:
         print(out)
 
+
 # Hash chess positions (so that we can use a queue)
 def hsh(bk, wk, wr):
     return str((bk, wk, wr))
+
 
 # Is entering field p1(2) certain death from p2(1)
 def is_capture_field(p1, p2):
@@ -95,7 +97,7 @@ def valid_new_wk(bk, wk, wr, state):
 
 
 def valid_new_wr(bk, wk, wr, state):
-    # This field is taked
+    # This field is taken
     if wr == bk or wr == wk:
         return False
 
@@ -137,7 +139,8 @@ def is_mat(bk, wk, wr):
 
     return False
 
-# Create all the necessarry references for the new state
+
+# Create all the necessary references for the new state
 def add_new_state(new_bk, new_wk, new_wr, bk, wk, wr, turn):
     global state, move_seq, to_visit
 
@@ -205,7 +208,7 @@ def encode(position):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Minimum moves to mat whites')
     parser.add_argument('--debug', action=argparse.BooleanOptionalAction,
-                        help='Debug option for visaulization')
+                        help='Debug option for visualization')
     args = parser.parse_args()
 
     with open("zad1_input.txt") as f, open("zad1_output.txt", "w") as out:

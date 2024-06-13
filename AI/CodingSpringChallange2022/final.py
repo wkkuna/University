@@ -1,10 +1,10 @@
-import sys
+import itertools
 import math
+import sys
+from random import choice, randint
 from tkinter import E
 
 from numpy import mat
-from random import randint, choice
-import itertools
 
 monster_type = 0
 ally_hero_type = 1

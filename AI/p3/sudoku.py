@@ -28,9 +28,11 @@ def horizontal():
 def vertical():
     return [all_different(get_column(j)) for j in range(9)]
 
+
 # MODIFIED: Constraint for the squares in sudoku
 def get_square(i, j):
     return [V(x, y) for x in range(i, i + 3) for y in range(j, j + 3)]
+
 
 # MODIFIED
 def squares():

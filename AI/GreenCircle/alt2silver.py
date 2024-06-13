@@ -1,6 +1,6 @@
 import sys
-from random import choice
 from itertools import combinations
+from random import choice
 
 card_type = {
     "training": 0,

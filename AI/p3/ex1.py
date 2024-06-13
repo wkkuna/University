@@ -1,13 +1,14 @@
 from collections import deque
-from numpy import zeros, ndarray
+
+from numpy import ndarray, zeros
 
 
 def generate_seqs(n: int, pattern: list[int]) -> list[list[int]]:
     '''
     Generate all possible sequences of 1s and 0s of length `n`
-    restricted by the pattern `pattern`, where each element on 
+    restricted by the pattern `pattern`, where each element on
     the list `pattern` specifies required length of 1s.
-    Each sequence of 1s must be seperated by at least one 0.
+    Each sequence of 1s must be separated by at least one 0.
     '''
 
     if not n:
@@ -24,7 +25,7 @@ def generate_seqs(n: int, pattern: list[int]) -> list[list[int]]:
         block += [0]
         new_n -= 1
 
-    # continiue the process for the rest of the pattern
+    # continue the process for the rest of the pattern
     cur_seqs = [block + p for p in generate_seqs(new_n, pattern[1:])]
     required_len = sum(pattern) + len(pattern) - 1
 
@@ -66,12 +67,12 @@ def solve(rspecs: list[list[int]], cspecs: list[list[int]]) -> ndarray:
         '''
         Mark the certain elements in the puzzle.
 
-        If an element occurs in all generated 
+        If an element occurs in all generated
         sequences it's certain.
         '''
         rfixed = current_rows[0][x]
 
-        # Fixed point within all the posible rows
+        # Fixed point within all the possible rows
         if all(row[x] == rfixed for row in current_rows):
             # the element is common for all possible rows,
             # therefore, it must be in the solution

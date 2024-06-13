@@ -1,10 +1,10 @@
 # As stated in task description
 # We randomly select row/column in which we're
 # going to make changes, then flip the bit that
-# is going to minimalize the `opt_dist` that is
+# is going to minimize the `opt_dist` that is
 # that is best for our current situation
 
-# I alter between modifing column/row as I think
+# I alter between modifying column/row as I think
 # it gets me the result quicker
 from random import choice, randint
 
@@ -37,10 +37,10 @@ class Puzzle:
         return min_cost
 
     def is_valid(self, x=None, y=None):
-        if x != None:
+        if x is not None:
             return self.opt_dist(x, rows_spec[x], True) == 0
 
-        if y != None:
+        if y is not None:
             return self.opt_dist(y, columns_spec[y], False) == 0
 
         for i in range(self.height):
@@ -132,7 +132,7 @@ class Puzzle:
 
 def solve_puzzle(puzzle):
     out = puzzle.solve()
-    while(out is None):
+    while (out is None):
         puzzle.reset()
         out = puzzle.solve()
     return out

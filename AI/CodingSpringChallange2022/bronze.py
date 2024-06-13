@@ -1,5 +1,5 @@
-import sys
 import math
+import sys
 from tkinter import E
 
 from numpy import mat, randint

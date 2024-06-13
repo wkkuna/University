@@ -1,5 +1,5 @@
-from collections import deque
 import heapq
+from collections import deque
 
 maze = []
 goals = []
@@ -33,7 +33,7 @@ def generate_new_positions(i, positions):
 
         new_positions.append((new_x, new_y) if all(
             [new_x in range(N), new_y in range(M), not is_wall(new_x, new_y)])
-            else (x,y))
+            else (x, y))
 
     return new_positions
 

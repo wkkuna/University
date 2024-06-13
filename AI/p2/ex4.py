@@ -1,5 +1,5 @@
-from itertools import permutations
 from collections import deque
+from itertools import permutations
 
 maze = []
 goals = []

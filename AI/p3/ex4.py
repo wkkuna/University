@@ -1,6 +1,7 @@
 def B(i, j):
     return 'B_%d_%d' % (i, j)
 
+
 # Constraint on a 2x2 square.
 # (i, j) - left top corner of the square
 # Allowed squares:
@@ -12,8 +13,10 @@ def square(i, j):
         .format(B(i, j), B(i, j+1), B(i+1, j), B(i+1, j+1),
                 B(i, j), B(i+1, j+1), B(i, j+1), B(i+1, j))
 
+
 def get_squares(R, C):
     return ',\n'.join([square(i, j) for i in range(R-1) for j in range(C-1)])
+
 
 # Constraint on the triples given on the input
 def triple(t):
@@ -23,9 +26,11 @@ def triple(t):
 def get_triples(triples):
     return ',\n'.join([triple(t) for t in triples])
 
+
 # Constraint on the sum of the row
 def sum_row(i, cols, K):
     return ' + '.join([B(i, j) for j in range(cols)]) + ' #= ' + str(K)
+
 
 # Constraint on the sum of the column
 def sum_column(j, rows, K):
@@ -36,9 +41,11 @@ def get_sums(rows, cols, R, C):
     return ',\n'.join([sum_row(i, C, r) for i, r in enumerate(rows)]) + ",\n" \
         + ',\n'.join([sum_column(j, R, c) for j, c in enumerate(cols)])
 
+
 # Constraint  on the domains (pixel is either 0 or 1)
 def get_domains(bs):
     return ', '.join([b + " in 0..1" for b in bs])
+
 
 # Constraint on the 1x3(3x1) rectangle: A + 2B + 3C != 2
 # (the middle pixel is not set when  the rest is not)
@@ -69,7 +76,7 @@ def storms(rows, cols, triples):
     writeln(get_domains(bs) + ',')
     # Constrain the sums of each row and column
     writeln(get_sums(rows, cols, R, C) + ',')
-    # Constrain that the storm is at least 2x2 square 
+    # Constrain that the storm is at least 2x2 square
     writeln(get_squares(R, C) + ',')
     # Constrain the storms on allowed 1x3 (3x1) rectangles (lecture)
     writeln(get_threes(R, C) + ', ')

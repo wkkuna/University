@@ -15,13 +15,14 @@ python validator.py --show_example zad1
 
 
 import argparse
+import gzip
 import os
 import signal
 import subprocess
-import threading
-import gzip
 import sys
+import threading
 import time
+
 
 def time_consuming_function(N): 
     d = {} 

@@ -1,5 +1,5 @@
-import sys
 import math
+import sys
 
 # Complete the hackathon before your opponent by following the principles of Green IT
 

@@ -3,7 +3,7 @@
 # wins / no of games.
 
 # The best deck (experimentally):
-# Blotkarz deck range(8, 11) and colours range(0, 4)
+# Blotkarz deck range(8, 11) and colors range(0, 4)
 # Possibility of Blotkarz's win 53.84%
 
 # We don't have to compare all poker rankings
@@ -26,16 +26,16 @@ class PokerTable:
         'High card': 0
     }
 
-    def __init__(self, ranks0=range(2, 11), ranks1=range(11, 15), colours0=range(0, 4), colours1=range(0, 4)):
-        self.deck0 = [[r, c] for r in ranks0 for c in colours0]
-        self.deck1 = [[r, c] for r in ranks1 for c in colours1]
+    def __init__(self, ranks0=range(2, 11), ranks1=range(11, 15), colors0=range(0, 4), colors1=range(0, 4)):
+        self.deck0 = [[r, c] for r in ranks0 for c in colors0]
+        self.deck1 = [[r, c] for r in ranks1 for c in colors1]
 
     def draw_hand(self, deck="blotkarz"):
         return sample(self.deck1, 5) if deck == "figurant" else sample(self.deck0, 5)
 
     def get_hand_ranking(self, hand):
         hand = sorted(hand, key=lambda x: x[0], reverse=True)
-        colour = [1]*5
+        color = [1]*5
         ascending = [1]*5
         one_rank = [1]*5
 
@@ -43,7 +43,7 @@ class PokerTable:
         for i, card in enumerate(hand[1:], 1):
             # Number of cards of each color
             if prev_card[1] == card[1]:
-                colour[i] = colour[i-1] + 1
+                color[i] = color[i-1] + 1
 
             # How many cards of the same rank
             if prev_card[0] == card[0]:
@@ -55,11 +55,11 @@ class PokerTable:
 
             prev_card = card
 
-        max_colour = max(colour)
+        max_color = max(color)
         max_ascending = max(ascending)
         max_one_rank = max(one_rank)
 
-        if max_ascending == 5 and max_colour == 5:
+        if max_ascending == 5 and max_color == 5:
             return self.hand_rankings['Straight flush']
 
         if max_one_rank == 4:
@@ -68,7 +68,7 @@ class PokerTable:
         if max_one_rank == 3 and 2 in one_rank:
             return self.hand_rankings['Full house']
 
-        if max_colour == 5:
+        if max_color == 5:
             return self.hand_rankings['Flush']
 
         if max_ascending == 5:
@@ -100,9 +100,9 @@ class PokerTable:
         return int(ranking1 > ranking0)
 
 
-def win_probability(sample, blotkarz_deck=range(2, 11), blotkarz_colours=range(0, 4)):
-    print(f"Blotkarz deck {blotkarz_deck} and colours {blotkarz_colours}")
-    pt = PokerTable(ranks0=blotkarz_deck, colours0=blotkarz_colours)
+def win_probability(sample, blotkarz_deck=range(2, 11), blotkarz_colors=range(0, 4)):
+    print(f"Blotkarz deck {blotkarz_deck} and colors {blotkarz_colors}")
+    pt = PokerTable(ranks0=blotkarz_deck, colors0=blotkarz_colors)
     wins = 0
 
     for _ in range(sample):

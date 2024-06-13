@@ -29,19 +29,17 @@ Prosta sprawdzarka. Przykłady użycia:
 
 
 import argparse
+import math
 import os
 import signal
 import subprocess
 import sys
 import threading
 import time
-import math
 import timeit
 
 import numpy as np
 
-
-import time
 
 def time_consuming_function(N): 
     d = {} 

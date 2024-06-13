@@ -7,7 +7,7 @@ def opt_dist(puzzle, D):
     bits = list(map(int, puzzle))
     min_cost = len(bits)
 
-    # Check the cost for each position of D consequtive ones
+    # Check the cost for each position of D consecutive ones
     for i in range(len(bits) - D + 1):
         min_cost = min(D - sum(bits[i:i+D]) +
                        sum(bits[:i]) + sum(bits[i+D:]), min_cost)

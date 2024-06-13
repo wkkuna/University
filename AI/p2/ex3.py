@@ -1,6 +1,6 @@
-from heapq import heappush, heappop
-from math import sqrt
+from heapq import heappop, heappush
 from itertools import permutations
+from math import sqrt
 
 
 class Board:  # 2d array of W, G
@@ -104,7 +104,8 @@ def get_meta_moves(board, start_pos):
                     if new_pos+d in board and board[new_pos+d] != 'B':
                         walls = [p for p in around(
                             new_pos+d) if board[p] == 'W']
-                        if len(walls) >= 3 or (len(walls) == 2 and walls[0].x != walls[1].x and walls[0].y != walls[1].y):
+                        if len(walls) >= 3 or \
+                                (len(walls) == 2 and walls[0].x != walls[1].x and walls[0].y != walls[1].y):
                             if new_pos+d not in board.goals:
                                 continue
                         moves.append((new_pos, direction))
@@ -164,20 +165,17 @@ def meta_search(board, goals, sokoban):  # TODO: TOO MANY POSSIBLE STATES
     while queue:
         priority, history, moves, board, min_position = heappop(queue)
         if all(board[goal] == 'B' for goal in goals):
-            print(f'meta_seen: {len(seen)}')
             return history
         if len(history) > depth:
             depth = len(history)
-            print(f'meta depth: {depth}')
         if len(seen) >= seen_size:
-            print(f'meta_seen: {seen_size}')
             seen_size += 100
         for move in moves:
             new_board = get_board(board, move)
             new_moves, new_min_position = get_meta_moves(new_board, move[0])
             if (new_board.boxes, new_min_position) not in seen:
                 new_history = history+[move]
-                #new_priority = len(new_history) + heuristic(new_board, goals)
+                # new_priority = len(new_history) + heuristic(new_board, goals)
                 new_priority = heuristic(new_board, goals)
                 heappush(queue, (new_priority, new_history,
                          new_moves, new_board, new_min_position))
@@ -220,10 +218,8 @@ with open("zad_input.txt", "r") as in_f:
             elif board[x, y] == '*':
                 board[x, y] = 'B'
                 goals.append(Pos(x, y))
-    # print(meta_search(board, goals, sokoban))
     board.update_boxes()
     assert len(set(board.boxes)) == len(set(goals))
     meta_moves = meta_search(board, goals, sokoban)
-    print(get_path(board, sokoban, meta_moves))
     with open("zad_output.txt", "w") as out_f:
         print(get_path(board, sokoban, meta_moves), file=out_f)
